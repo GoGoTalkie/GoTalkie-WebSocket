@@ -55,10 +55,9 @@ function displayMessages() {
     let chatKey = currentChat.type === 'private' ? currentChat.name : 'group_' + currentChat.name;
     const messages = chats[chatKey] || [];
     
-    messages.forEach((msg, index) => {
+    messages.forEach((msg) => {
         const div = document.createElement('div');
         div.className = 'message ' + (msg.from === myName ? 'own' : 'other');
-        div.style.animationDelay = `${index * 0.03}s`;
         
         const sender = document.createElement('div');
         sender.className = 'message-sender';

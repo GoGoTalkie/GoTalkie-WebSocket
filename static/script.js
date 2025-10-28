@@ -109,9 +109,16 @@ function updateUsersList(users) {
     users.forEach(user => {
         if (user !== myName) {
             const div = document.createElement('div');
-            div.className = 'list-item';
+            div.className = 'list-item user-item';
+            div.setAttribute('data-user', user);
             div.textContent = user;
             div.onclick = () => openPrivateChat(user);
+            
+            // Highlight if this is the current chat
+            if (currentChat && currentChat.type === 'private' && currentChat.name === user) {
+                div.classList.add('active');
+            }
+            
             list.appendChild(div);
         }
     });
@@ -122,26 +129,38 @@ function updateGroupsList(groups) {
     list.innerHTML = '';
     groups.forEach(group => {
         const div = document.createElement('div');
-        div.className = 'list-item';
+        div.className = 'list-item group-item';
+        div.setAttribute('data-group', group.name);
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'group-header';
         
         const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
         nameSpan.textContent = group.name;
-        div.appendChild(nameSpan);
+        headerDiv.appendChild(nameSpan);
 
         if (!group.members.includes(myName)) {
             const joinBtn = document.createElement('button');
             joinBtn.className = 'join-button';
-            joinBtn.textContent = 'Join';
+            joinBtn.innerHTML = '<span class="join-icon">+</span> Join';
             joinBtn.onclick = (e) => {
                 e.stopPropagation();
                 joinGroup(group.name);
             };
-            div.appendChild(joinBtn);
+            headerDiv.appendChild(joinBtn);
+        } else {
+            const memberBadge = document.createElement('span');
+            memberBadge.className = 'member-badge';
+            memberBadge.textContent = 'Member';
+            headerDiv.appendChild(memberBadge);
         }
+        
+        div.appendChild(headerDiv);
 
         const membersDiv = document.createElement('div');
         membersDiv.className = 'group-members';
-        membersDiv.textContent = 'Members: ' + group.members.join(', ');
+        membersDiv.innerHTML = `<span class="member-icon">👥</span> ${group.members.length} member${group.members.length > 1 ? 's' : ''}`;
         div.appendChild(membersDiv);
 
         div.onclick = () => {
@@ -149,23 +168,61 @@ function updateGroupsList(groups) {
                 openGroupChat(group.name);
             }
         };
+        
+        // Highlight if this is the current chat
+        if (currentChat && currentChat.type === 'group' && currentChat.name === group.name) {
+            div.classList.add('active');
+        }
+        
         list.appendChild(div);
     });
 }
 
 function openPrivateChat(user) {
-    currentChat = {type: 'private', name: user};
-    document.getElementById('chat-title').textContent = 'Private Chat with ' + user;
-    if (!chats[user]) chats[user] = [];
-    displayMessages();
+    // Remove all active states
+    document.querySelectorAll('.list-item').forEach(item => item.classList.remove('active'));
+    
+    // Add active state to selected user
+    const userItem = document.querySelector(`.user-item[data-user="${user}"]`);
+    if (userItem) userItem.classList.add('active');
+    
+    const chatArea = document.getElementById('chat-area');
+    chatArea.classList.add('fade-transition');
+    
+    setTimeout(() => {
+        currentChat = {type: 'private', name: user};
+        document.getElementById('chat-title').textContent = 'Private Chat with ' + user;
+        if (!chats[user]) chats[user] = [];
+        displayMessages();
+        
+        setTimeout(() => {
+            chatArea.classList.remove('fade-transition');
+        }, 50);
+    }, 150);
 }
 
 function openGroupChat(groupName) {
-    currentChat = {type: 'group', name: groupName};
-    document.getElementById('chat-title').textContent = 'Group: ' + groupName;
-    const chatKey = 'group_' + groupName;
-    if (!chats[chatKey]) chats[chatKey] = [];
-    displayMessages();
+    // Remove all active states
+    document.querySelectorAll('.list-item').forEach(item => item.classList.remove('active'));
+    
+    // Add active state to selected group
+    const groupItem = document.querySelector(`.group-item[data-group="${groupName}"]`);
+    if (groupItem) groupItem.classList.add('active');
+    
+    const chatArea = document.getElementById('chat-area');
+    chatArea.classList.add('fade-transition');
+    
+    setTimeout(() => {
+        currentChat = {type: 'group', name: groupName};
+        document.getElementById('chat-title').textContent = 'Group: ' + groupName;
+        const chatKey = 'group_' + groupName;
+        if (!chats[chatKey]) chats[chatKey] = [];
+        displayMessages();
+        
+        setTimeout(() => {
+            chatArea.classList.remove('fade-transition');
+        }, 50);
+    }, 150);
 }
 
 function displayMessages() {
@@ -175,9 +232,10 @@ function displayMessages() {
     let chatKey = currentChat.type === 'private' ? currentChat.name : 'group_' + currentChat.name;
     const messages = chats[chatKey] || [];
     
-    messages.forEach(msg => {
+    messages.forEach((msg, index) => {
         const div = document.createElement('div');
         div.className = 'message ' + (msg.from === myName ? 'own' : 'other');
+        div.style.animationDelay = `${index * 0.03}s`;
         
         const sender = document.createElement('div');
         sender.className = 'message-sender';
@@ -284,7 +342,7 @@ function confirmCreateGroup() {
         return;
     }
     
-    if (name.length < 3) {
+        if (name.length < 3) {
         showNotification('Group name must be at least 3 characters', 'warning');
         return;
     }
@@ -338,3 +396,4 @@ function getNotificationIcon(type) {
     };
     return icons[type] || icons['info'];
 }
+

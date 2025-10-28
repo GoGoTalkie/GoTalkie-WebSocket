@@ -98,6 +98,12 @@ body {
     display: flex;
     flex-direction: column;
     background: #ecf0f1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-transition {
+    opacity: 0 !important;
+    transform: translateY(10px) !important;
 }
 
 #chat-header {
@@ -114,10 +120,35 @@ body {
 
 .message {
     margin-bottom: 15px;
+    animation: messageSlideIn 0.3s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .message.own {
     text-align: right;
+    animation: messageSlideInRight 0.3s ease-out forwards;
+}
+
+@keyframes messageSlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .message-sender {

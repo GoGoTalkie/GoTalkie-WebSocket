@@ -72,5 +72,12 @@ function displayMessages() {
         container.appendChild(div);
     });
     
-    container.scrollTop = container.scrollHeight;
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('messages');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
 }

@@ -99,6 +99,8 @@ body {
     flex-direction: column;
     background: #ecf0f1;
     transition: opacity 0.3s ease, transform 0.3s ease;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .fade-transition {
@@ -116,6 +118,7 @@ body {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .message {
@@ -154,6 +157,7 @@ body {
     padding: 15px;
     background: white;
     border-top: 1px solid #ddd;
+    flex-shrink: 0;
 }
 
 #message-input {

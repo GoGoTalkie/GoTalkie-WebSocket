@@ -86,6 +86,7 @@ function handleMessage(msg) {
         chats[chatKey].push(msg);
         if (currentChat && currentChat.type === 'private' && currentChat.name === chatKey) {
             displayMessages();
+            scrollToBottom();
         }
         return;
     }
@@ -96,6 +97,7 @@ function handleMessage(msg) {
         chats[chatKey].push(msg);
         if (currentChat && currentChat.type === 'group' && currentChat.name === msg.group_name) {
             displayMessages();
+            scrollToBottom();
         }
         return;
     }
@@ -121,6 +123,7 @@ function sendMessage() {
     }
 
     input.value = '';
+    scrollToBottom();
 }
 
 function joinGroup(groupName) {

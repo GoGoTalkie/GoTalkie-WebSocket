@@ -44,11 +44,6 @@ function updateGroupsList(groups) {
                 joinGroup(group.name);
             };
             headerDiv.appendChild(joinBtn);
-        } else {
-            const memberBadge = document.createElement('span');
-            memberBadge.className = 'member-badge';
-            memberBadge.textContent = 'Member';
-            headerDiv.appendChild(memberBadge);
         }
         
         div.appendChild(headerDiv);

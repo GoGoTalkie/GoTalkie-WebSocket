@@ -218,13 +218,7 @@ function sendMessage() {
 }
 
 function createGroup() {
-    const name = prompt('Enter group name:');
-    if (name && name.trim()) {
-        ws.send(JSON.stringify({
-            type: 'create_group',
-            group_name: name.trim()
-        }));
-    }
+    showModal();
 }
 
 function joinGroup(groupName) {
@@ -232,6 +226,76 @@ function joinGroup(groupName) {
         type: 'join_group',
         group_name: groupName
     }));
+}
+
+function showModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="group-name-input">Group Name</label>
+                <input type="text" id="group-name-input" placeholder="Enter group name" maxlength="50" />
+                <div class="modal-hint">Choose a unique name for your group</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-create" onclick="confirmCreateGroup()">Create Group</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus on input
+    setTimeout(() => {
+        document.getElementById('group-name-input').focus();
+    }, 100);
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    
+    // Create on Enter key
+    document.getElementById('group-name-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') confirmCreateGroup();
+    });
+}
+
+function closeModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.classList.add('fade-out');
+        setTimeout(() => modal.remove(), 200);
+    }
+}
+
+function confirmCreateGroup() {
+    const input = document.getElementById('group-name-input');
+    const name = input.value.trim();
+    
+    if (!name) {
+        showNotification('Please enter a group name', 'warning');
+        return;
+    }
+    
+    if (name.length < 3) {
+        showNotification('Group name must be at least 3 characters', 'warning');
+        return;
+    }
+    
+    ws.send(JSON.stringify({
+        type: 'create_group',
+        group_name: name
+    }));
+    
+    closeModal();
+    showNotification('Creating group...', 'info');
 }
 
 document.getElementById('message-input').addEventListener('keypress', (e) => {

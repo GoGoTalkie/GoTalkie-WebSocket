@@ -22,18 +22,45 @@ function connect() {
     };
 
     ws.onerror = () => {
-        document.getElementById('error').textContent = 'Connection failed';
+        showNotification('Connection failed', 'error');
     };
 
-    ws.onclose = () => {
-        alert('Connection closed');
-        location.reload();
+    ws.onclose = (event) => {
+        // Check if it's a normal closure or forced closure
+        if (event.code === 1000) {
+            // Normal closure
+            showNotification('Connection closed', 'info');
+        } else if (event.code === 1006) {
+            // same name in use
+            showNotification('This name is already in use', 'warning');
+        } else {
+            // Unexpected closure
+            showNotification('Connection lost. Please try again', 'error');
+        }
+        
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
     };
 }
 
 function handleMessage(msg) {
     if (msg.type === 'error') {
-        document.getElementById('error').textContent = msg.error;
+        showNotification(msg.error, 'error');
+        return;
+    }
+
+    if (msg.type === 'duplicate_login') {
+        showNotification('This account is being logged in from another location', 'warning');
+        return;
+    }
+
+    if (msg.type === 'kicked') {
+        showNotification('You have been disconnected due to login from another device', 'warning');
+        setTimeout(() => {
+            ws.close();
+            location.reload();
+        }, 2000);
         return;
     }
 
@@ -214,3 +241,36 @@ document.getElementById('message-input').addEventListener('keypress', (e) => {
 document.getElementById('username').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') connect();
 });
+
+function showNotification(message, type = 'info') {
+    // Remove existing notification if any
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${getNotificationIcon(type)}</span>
+            <span class="notification-message">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'info': 'ℹ️',
+        'success': '✅',
+        'warning': '⚠️',
+        'error': '❌'
+    };
+    return icons[type] || icons['info'];
+}

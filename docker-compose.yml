@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  gotalkie-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    container_name: gotalkie-websocket
+    environment:
+      - GO_ENV=production
+    networks:
+      - gotalkie-network
+
+networks:
+  gotalkie-network:
+    driver: bridge

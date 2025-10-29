@@ -59,12 +59,12 @@
             </div>
             
             <div class="section">
-                <h3>Online Users (R4)</h3>
+                <h3>Online Users</h3>
                 <div id="users-list"></div>
             </div>
             
             <div class="section">
-                <h3>Groups (R9)</h3>
+                <h3>Groups</h3>
                 <button class="create-button" onclick="createGroup()">+ Create Group</button>
                 <div id="groups-list"></div>
             </div>
@@ -97,7 +97,10 @@
                 return;
             }
 
-            ws = new WebSocket('ws://localhost:8080/ws');
+            // Dynamic WebSocket URL - works for both local and cloud deployment
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
                 ws.send(JSON.stringify({type: 'register', content: name}));

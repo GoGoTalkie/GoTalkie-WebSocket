@@ -12,8 +12,7 @@ env:
   SERVICE: gogotalkie
   REPO: cloud-run-source-deploy
   WORKLOAD_IDENTITY_PROVIDER: projects/898222558375/locations/global/workloadIdentityPools/github-actions/providers/github
-  SERVICE_ACCOUNT_EMAIL: 898222558375-compute@developer.gserviceaccount.com 
-
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,34 +24,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - id: auth
-        name: Authenticate to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2'
         with:
-          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ env.SERVICE_ACCOUNT_EMAIL }}
-          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
 
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-
-      - name: Build & Push
-        env:
-          IMAGE: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
-        run: |
-          echo "IMAGE=${IMAGE}"
-          docker build -t "${IMAGE}" .
-          docker push "${IMAGE}"
-          echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
-
-      - id: deploy
-        name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
+      - name: 'Docker Auth'
+        uses: 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567' # docker/login-action@v3
         with:
-          service: ${{ env.SERVICE }}
-          region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}
-          flags: --port=8080 --allow-unauthenticated
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.auth_token }}'
+          registry: '${{ env.REGION }}-docker.pkg.dev'
+
+      - name: 'Build and Push Container'
+        run: |-
+          DOCKER_TAG="$${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build --tag "${DOCKER_TAG}" .
+          docker push "${DOCKER_TAG}"
+      - name: 'Deploy to Cloud Run'
+
+
+        uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
+        with:
+          service: '${{ env.SERVICE }}'
+          region: '${{ env.REGION }}'
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}'
+          
+      - name: 'Show output'
+        run: |2-
+          echo ${{ steps.deploy.outputs.url }}

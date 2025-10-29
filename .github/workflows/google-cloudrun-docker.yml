@@ -16,8 +16,7 @@ env:
   SERVICE: gogotalkie
   REPO: cloud-run-source-deploy
   WORKLOAD_IDENTITY_PROVIDER: projects/898222558375/locations/global/workloadIdentityPools/github-actions/providers/github
-  SERVICE_ACCOUNT_EMAIL: github-action@swdevprac.iam.gserviceaccount.com 
-
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -30,8 +29,6 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ env.SERVICE_ACCOUNT_EMAIL }}
-          token_format: access_token
 
       - name: Docker Auth
         uses: docker/login-action@v3

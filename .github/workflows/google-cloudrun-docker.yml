@@ -11,6 +11,7 @@ env:
   REGION: 'asia-southeast1'
   SERVICE: 'gogotalkie'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/898222558375/locations/global/workloadIdentityPools/github-actions/providers/github'
+  REPO : 'cloud-run-source-deploy'
   
 
 jobs:
@@ -40,7 +41,7 @@ jobs:
 
       - name: 'Build and Push Container'
         run: |-
-          DOCKER_TAG="$${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+          DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}:${{ github.sha }}"
           docker build --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
       - name: 'Deploy to Cloud Run'

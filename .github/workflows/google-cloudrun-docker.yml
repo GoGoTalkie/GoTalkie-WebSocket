@@ -24,18 +24,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2'
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@3'
         with:
+          project_id : '${{env.PROJECT_ID}}'
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
 
-      - name: Docker Auth
-        uses: docker/login-action@v3
+      - name: 'Docker Auth'
+        uses: 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567'
         with:
-          registry: ${{ env.REGION }}-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.auth_token }}'
+          registry: '${{ env.REGION }}-docker.pkg.dev'
+
+      - name: Configure Docker to use Artifact Registry
+        run: gcloud auth configure-docker ${env.REGION}-docker.pkg.dev
 
       - name: Build and Push Container
         env:

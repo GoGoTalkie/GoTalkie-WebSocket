@@ -30,13 +30,6 @@ jobs:
           project_id : '${{env.PROJECT_ID}}'
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
 
-      - name: 'Docker Auth'
-        uses: 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.auth_token }}'
-          registry: '${{ env.REGION }}-docker.pkg.dev'
-
       - name: Configure Docker to use Artifact Registry
         run: gcloud auth configure-docker ${env.REGION}-docker.pkg.dev
 

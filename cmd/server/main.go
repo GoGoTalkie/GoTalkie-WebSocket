@@ -1,12 +1,12 @@
 package main
 
 import (
-"encoding/json"
-"log"
+	"encoding/json"
+	"log"
 
-"github.com/GoGoTalkie/GoTalkie-WebSocket/server"
-"github.com/gofiber/fiber/v2"
-"github.com/gofiber/websocket/v2"
+	"github.com/GoGoTalkie/GoTalkie-WebSocket/server"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 )
 
 var hub *server.Hub
@@ -16,12 +16,20 @@ func main() {
 	go hub.Run()
 
 	app := fiber.New()
+	// Serve React build files or fallback to static folder
+	app.Static("/", "./client/dist", fiber.Static{
+		Compress:  true,
+		ByteRange: true,
+		Browse:    false,
+		Index:     "index.html",
+	})
+	// Fallback for old static files (if client/dist doesn't exist)
 	app.Static("/", "./static")
 
 	app.Use("/ws", func(c *fiber.Ctx) error {
-if websocket.IsWebSocketUpgrade(c) {
-c.Locals("allowed", true)
-return c.Next()
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
 		}
 		return fiber.ErrUpgradeRequired
 	})

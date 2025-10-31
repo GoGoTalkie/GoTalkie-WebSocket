@@ -1,4 +1,4 @@
-import { Message, MessageType, MessageTypes } from '../types';
+import { Message, MessageType, MessageTypes, FileData } from '../types';
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
@@ -44,6 +44,31 @@ export class WebSocketService {
       if (content !== undefined) message.content = content;
       if (to !== undefined) message.to = to;
       if (group_name !== undefined) message.group_name = group_name;
+      
+      this.ws.send(JSON.stringify(message));
+    }
+  }
+
+  sendFile(file: FileData, type: 'private' | 'group', target: string): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      const message: Message = {
+        type: type === 'private' ? MessageTypes.FILE_PRIVATE : MessageTypes.FILE_GROUP,
+        file: file
+      };
+      
+      if (type === 'private') {
+        message.to = target;
+      } else {
+        message.group_name = target;
+      }
+      
+      console.log('Sending file message:', {
+        type: message.type,
+        to: message.to,
+        group_name: message.group_name,
+        fileName: file.name,
+        fileSize: file.size
+      });
       
       this.ws.send(JSON.stringify(message));
     }

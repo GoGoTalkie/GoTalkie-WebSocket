@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Chat, Message } from '../types';
+import { Chat, Message, FileData } from '../types';
+import FilePreviewModal from './FilePreviewModal';
+import FileMessage from './FileMessage';
 
 interface ChatAreaProps {
   currentChat: Chat | null;
   messages: Message[];
   myName: string;
   onSendMessage: (content: string) => void;
+  onSendFile: (file: FileData, chatType: 'private' | 'group', chatName: string) => void;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -13,9 +16,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   messages,
   myName,
   onSendMessage,
+  onSendFile,
 }) => {
   const [messageInput, setMessageInput] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileContent, setFileContent] = useState('');
+  const [previewFile, setPreviewFile] = useState<{file: File, content: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +48,64 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
+  const handleFileButtonClick = () => {
+    if (!currentChat) {
+      alert('Please select a user or group first');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (2MB limit)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('File size must be less than 2MB');
+      e.target.value = '';
+      return;
+    }
+
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setSelectedFile(file);
+      setFileContent(content);
+      setShowPreview(true);
+    };
+    reader.onerror = () => {
+      alert('Error reading file');
+    };
+    reader.readAsText(file);
+
+    e.target.value = '';
+  };
+
+  const handleSendFile = () => {
+    if (!selectedFile || !fileContent || !currentChat) return;
+
+    const fileData: FileData = {
+      name: selectedFile.name,
+      content: fileContent,
+      size: selectedFile.size,
+      type: selectedFile.type
+    };
+
+    onSendFile(fileData, currentChat.type, currentChat.name);
+    setShowPreview(false);
+    setSelectedFile(null);
+    setFileContent('');
+  };
+
+  const handlePreviewReceivedFile = (file: FileData) => {
+    // Create a fake File object for preview
+    const fakeFile = new File([file.content], file.name, { type: file.type });
+    setPreviewFile({ file: fakeFile, content: file.content });
+  };
+
   const getChatTitle = () => {
     if (!currentChat) return 'Select a user or group';
     return currentChat.type === 'private'
@@ -58,12 +125,34 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             className={`message ${msg.from === myName ? 'own' : 'other'}`}
           >
             <div className="message-sender">{msg.from}</div>
-            <div className="message-content">{msg.content}</div>
+            {msg.file ? (
+              <FileMessage 
+                file={msg.file} 
+                onPreview={() => handlePreviewReceivedFile(msg.file!)}
+              />
+            ) : (
+              <div className="message-content">{msg.content}</div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
       <div className="input-area">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".c,.cpp,.h,.hpp,.cc,.cxx,.py,.js,.java,.go,.rs,.ts,.jsx,.tsx,.json,.xml,.html,.css,.sql,.sh,.bat,.md,.txt"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
+        <button 
+          className="file-button" 
+          onClick={handleFileButtonClick}
+          disabled={!currentChat}
+          title="Attach file"
+        >
+          📎
+        </button>
         <input
           type="text"
           value={messageInput}
@@ -76,6 +165,27 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           Send
         </button>
       </div>
+      {showPreview && selectedFile && (
+        <FilePreviewModal
+          file={selectedFile}
+          content={fileContent}
+          onClose={() => {
+            setShowPreview(false);
+            setSelectedFile(null);
+            setFileContent('');
+          }}
+          onSend={handleSendFile}
+        />
+      )}
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile.file}
+          content={previewFile.content}
+          onClose={() => setPreviewFile(null)}
+          onSend={() => {}}
+          isReceived={true}
+        />
+      )}
     </div>
   );
 };

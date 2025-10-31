@@ -81,27 +81,44 @@ function App() {
       return;
     }
 
-    if (msg.type === MessageTypes.GROUP_MESSAGE) {
-      const currentMyName = myNameRef.current; // Get value from ref
-      const chatKey = 'group_' + msg.group_name;
+    if (msg.type === MessageTypes.FILE_PRIVATE) {
+      const currentMyName = myNameRef.current;
+      const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
       
-      // Debug: see what server sent
-      // console.log('📩 Received GROUP_MESSAGE:', {
-      //   from: msg.from,
-      //   myName: currentMyName,
-      //   isMyMessage: msg.from === currentMyName,
-      //   content: msg.content
-      // });
-      
-      // Don't add our own message (already added in handleSendMessage)
+      // Don't add our own message (already added in handleSendFile)
       if (msg.from !== currentMyName) {
-        // console.log('✅ Adding message from other user');
         setChats((prev) => ({
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
-      } else {
-        // console.log('⏭️ Skipping my own message');
+      }
+      return;
+    }
+
+    if (msg.type === MessageTypes.GROUP_MESSAGE) {
+      const currentMyName = myNameRef.current; // Get value from ref
+      const chatKey = 'group_' + msg.group_name;
+      
+      // Don't add our own message (already added in handleSendMessage)
+      if (msg.from !== currentMyName) {
+        setChats((prev) => ({
+          ...prev,
+          [chatKey]: [...(prev[chatKey] || []), msg],
+        }));
+      }
+      return;
+    }
+
+    if (msg.type === MessageTypes.FILE_GROUP) {
+      const currentMyName = myNameRef.current;
+      const chatKey = 'group_' + msg.group_name;
+      
+      // Don't add our own message (already added in handleSendFile)
+      if (msg.from !== currentMyName) {
+        setChats((prev) => ({
+          ...prev,
+          [chatKey]: [...(prev[chatKey] || []), msg],
+        }));
       }
       return;
     }
@@ -155,8 +172,6 @@ function App() {
       wsService.current.send(MessageTypes.PRIVATE, content, currentChat.name);
     } else {
       // Add our message to state immediately (group)
-      // console.log('📤 Sending GROUP message:', content);
-      
       const myMessage: Message = {
         type: MessageTypes.GROUP_MESSAGE,
         from: myName,
@@ -165,7 +180,6 @@ function App() {
       };
       
       const chatKey = 'group_' + currentChat.name;
-      // console.log('➕ Adding my message to local state');
       setChats((prev) => ({
         ...prev,
         [chatKey]: [...(prev[chatKey] || []), myMessage],
@@ -174,6 +188,34 @@ function App() {
       // Send message to server
       wsService.current.send(MessageTypes.GROUP_MESSAGE, content, undefined, currentChat.name);
     }
+  };
+
+  const handleSendFile = (file: import('./types').FileData, chatType: 'private' | 'group', chatName: string) => {
+    const myMessage: Message = {
+      type: chatType === 'private' ? MessageTypes.FILE_PRIVATE : MessageTypes.FILE_GROUP,
+      from: myName,
+      file: file
+    };
+
+    if (chatType === 'private') {
+      myMessage.to = chatName;
+      const chatKey = chatName;
+      setChats((prev) => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), myMessage],
+      }));
+    } else {
+      myMessage.group_name = chatName;
+      const chatKey = 'group_' + chatName;
+      setChats((prev) => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), myMessage],
+      }));
+    }
+
+    // Send file to server
+    wsService.current.sendFile(file, chatType, chatName);
+    showNotification(`File "${file.name}" sent successfully`, 'success');
   };
 
   const handleJoinGroup = (groupName: string) => {
@@ -228,6 +270,7 @@ function App() {
         messages={getCurrentMessages()}
         myName={myName}
         onSendMessage={handleSendMessage}
+        onSendFile={handleSendFile}
       />
       {notification && (
         <Notification message={notification.message} type={notification.type} />

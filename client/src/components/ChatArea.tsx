@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Chat, Message } from '../types';
+import stickers, { Sticker } from '../stickers';
 
 interface ChatAreaProps {
   currentChat: Chat | null;
@@ -15,6 +16,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   onSendMessage,
 }) => {
   const [messageInput, setMessageInput] = useState('');
+  const [showStickers, setShowStickers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,6 +41,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
+  const handleStickerClick = (s: Sticker) => {
+    if (!currentChat) return;
+    // Send sticker by id so other clients can map to local assets
+    onSendMessage(`sticker:${s.id}`);
+  };
+
   const getChatTitle = () => {
     if (!currentChat) return 'Select a user or group';
     return currentChat.type === 'private'
@@ -52,18 +60,43 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         <h2>{getChatTitle()}</h2>
       </div>
       <div className="messages">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`message ${msg.from === myName ? 'own' : 'other'}`}
-          >
-            <div className="message-sender">{msg.from}</div>
-            <div className="message-content">{msg.content}</div>
-          </div>
-        ))}
+        {messages.map((msg, index) => {
+          const isSticker = msg.content?.startsWith('sticker:');
+          const stickerId = isSticker ? msg.content!.slice('sticker:'.length) : undefined;
+          const stickerObj = stickerId ? stickers.find((st) => st.id === stickerId) : undefined;
+          return (
+            <div
+              key={index}
+              className={`message ${msg.from === myName ? 'own' : 'other'}`}
+            >
+              <div className="message-sender">{msg.from}</div>
+              <div className={`message-content ${isSticker ? 'sticker-content' : ''}`}>
+                {isSticker ? (
+                  stickerObj ? (
+                    <div className="sticker">
+                      <img src={stickerObj.src} alt={stickerObj.alt} />
+                    </div>
+                  ) : (
+                    <div className="sticker">{stickerId}</div>
+                  )
+                ) : (
+                  msg.content
+                )}
+              </div>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
       <div className="input-area">
+        <button
+          className="sticker-button"
+          onClick={() => setShowStickers((s) => !s)}
+          aria-label="Toggle stickers"
+          disabled={!currentChat}
+        >
+          😊
+        </button>
         <input
           type="text"
           value={messageInput}
@@ -76,6 +109,21 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           Send
         </button>
       </div>
+
+      {showStickers && (
+        <div className="sticker-panel">
+          {stickers.map((s) => (
+            <button
+              key={s.id}
+              className="sticker-item"
+              onClick={() => handleStickerClick(s)}
+              aria-label={`Send sticker ${s.alt}`}
+            >
+              <img src={s.src} alt={s.alt} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

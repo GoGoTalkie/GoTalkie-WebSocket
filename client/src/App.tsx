@@ -22,7 +22,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
 
   const wsService = useRef<WebSocketService>(new WebSocketService());
-  const myNameRef = useRef<string>(''); // เก็บค่า myName ล่าสุด
+  const myNameRef = useRef<string>(''); // Store latest myName value
 
   const showNotification = useCallback((message: string, type: NotificationType = 'info') => {
     setNotification({ message, type });
@@ -52,7 +52,7 @@ function App() {
     if (msg.type === MessageTypes.REGISTER) {
       const name = msg.content?.split(' ').pop() || '';
       setMyName(name);
-      myNameRef.current = name; // อัปเดต ref ด้วย
+      myNameRef.current = name; // Update ref
       setIsLoggedIn(true);
       return;
     }
@@ -68,10 +68,10 @@ function App() {
     }
 
     if (msg.type === MessageTypes.PRIVATE) {
-      const currentMyName = myNameRef.current; // ใช้ค่าจาก ref
+      const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
       
-      // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
+      // Don't add our own message (already added in handleSendMessage)
       if (msg.from !== currentMyName) {
         setChats((prev) => ({
           ...prev,
@@ -82,10 +82,10 @@ function App() {
     }
 
     if (msg.type === MessageTypes.GROUP_MESSAGE) {
-      const currentMyName = myNameRef.current; // ใช้ค่าจาก ref
+      const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = 'group_' + msg.group_name;
       
-      // Debug: ดูว่า server ส่งอะไรมา
+      // Debug: see what server sent
       // console.log('📩 Received GROUP_MESSAGE:', {
       //   from: msg.from,
       //   myName: currentMyName,
@@ -93,7 +93,7 @@ function App() {
       //   content: msg.content
       // });
       
-      // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
+      // Don't add our own message (already added in handleSendMessage)
       if (msg.from !== currentMyName) {
         // console.log('✅ Adding message from other user');
         setChats((prev) => ({
@@ -105,7 +105,7 @@ function App() {
       }
       return;
     }
-  }, [showNotification]); // ลบ myName ออกจาก dependency เพราะใช้ ref แทน
+  }, [showNotification]); // Removed myName from dependency, using ref instead
 
   const handleConnect = (username: string) => {
     wsService.current.connect(
@@ -137,7 +137,7 @@ function App() {
     if (!currentChat) return;
 
     if (currentChat.type === 'private') {
-      // เพิ่มข้อความของเราเองลง state ทันที
+      // Add our message to state immediately
       const myMessage: Message = {
         type: MessageTypes.PRIVATE,
         from: myName,
@@ -151,10 +151,10 @@ function App() {
         [chatKey]: [...(prev[chatKey] || []), myMessage],
       }));
       
-      // ส่งข้อความไปที่ server
+      // Send message to server
       wsService.current.send(MessageTypes.PRIVATE, content, currentChat.name);
     } else {
-      // เพิ่มข้อความของเราเองลง state ทันที (group)
+      // Add our message to state immediately (group)
       // console.log('📤 Sending GROUP message:', content);
       
       const myMessage: Message = {
@@ -171,7 +171,7 @@ function App() {
         [chatKey]: [...(prev[chatKey] || []), myMessage],
       }));
       
-      // ส่งข้อความไปที่ server
+      // Send message to server
       wsService.current.send(MessageTypes.GROUP_MESSAGE, content, undefined, currentChat.name);
     }
   };

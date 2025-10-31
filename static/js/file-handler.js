@@ -9,7 +9,24 @@ const FILE_TYPES = {
     '.cc': 'C++',
     '.cxx': 'C++',
     '.h': 'C/C++ Header',
-    '.hpp': 'C++ Header'
+    '.hpp': 'C++ Header',
+    '.py': 'Python',
+    '.js': 'JavaScript',
+    '.ts': 'TypeScript',
+    '.jsx': 'React JSX',
+    '.tsx': 'React TSX',
+    '.java': 'Java',
+    '.go': 'Go',
+    '.rs': 'Rust',
+    '.json': 'JSON',
+    '.xml': 'XML',
+    '.html': 'HTML',
+    '.css': 'CSS',
+    '.sql': 'SQL',
+    '.sh': 'Shell Script',
+    '.bat': 'Batch',
+    '.md': 'Markdown',
+    '.txt': 'Text'
 };
 
 // Trigger file input click
@@ -36,10 +53,10 @@ function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Check file size (limit to 1MB)
-    const maxSize = 1024 * 1024; // 1MB
+    // Check file size (limit to 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-        showNotification('File size must be less than 1MB', 'error');
+        showNotification('File size must be less than 2MB', 'error');
         event.target.value = '';
         return;
     }
@@ -49,7 +66,7 @@ function handleFileSelect(event) {
     
     // Check if it's a supported file type
     if (!FILE_TYPES[ext]) {
-        showNotification('Only C/C++ files are supported (.c, .cpp, .h, .hpp)', 'warning');
+        showNotification('Unsupported file type. Please upload a code or text file.', 'warning');
         event.target.value = '';
         return;
     }
@@ -117,6 +134,7 @@ function closeFilePreview() {
 // Confirm and send file
 function confirmFileSend() {
     if (!currentFile || !currentFileData || !currentChat) {
+        console.error('Missing required data:', { currentFile, hasData: !!currentFileData, currentChat });
         return;
     }
     
@@ -133,6 +151,14 @@ function confirmFileSend() {
         }
     };
     
+    console.log('Sending file message:', {
+        type: fileMessage.type,
+        to: fileMessage.to,
+        group_name: fileMessage.group_name,
+        fileName: fileMessage.file.name,
+        fileSize: fileMessage.file.size
+    });
+    
     // Send via WebSocket
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(fileMessage));
@@ -143,7 +169,7 @@ function confirmFileSend() {
     }
 }
 
-// Basic syntax highlighting for C/C++
+// Syntax highlighting for multiple languages
 function highlightCode(code, ext) {
     // Escape HTML
     code = code
@@ -151,19 +177,65 @@ function highlightCode(code, ext) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     
-    // Keywords
-    const keywords = [
-        'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
-        'double', 'else', 'enum', 'extern', 'float', 'for', 'goto', 'if',
-        'inline', 'int', 'long', 'register', 'restrict', 'return', 'short',
-        'signed', 'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
-        'unsigned', 'void', 'volatile', 'while', '_Bool', '_Complex', '_Imaginary',
-        'class', 'namespace', 'template', 'typename', 'public', 'private',
-        'protected', 'virtual', 'friend', 'operator', 'new', 'delete', 'this',
-        'try', 'catch', 'throw', 'using', 'bool', 'true', 'false', 'nullptr',
-        'constexpr', 'decltype', 'explicit', 'export', 'mutable', 'override',
-        'final', 'noexcept', 'static_assert', 'thread_local'
-    ];
+    // Define keywords for different languages
+    const languageKeywords = {
+        c: ['auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
+            'double', 'else', 'enum', 'extern', 'float', 'for', 'goto', 'if',
+            'inline', 'int', 'long', 'register', 'restrict', 'return', 'short',
+            'signed', 'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
+            'unsigned', 'void', 'volatile', 'while'],
+        cpp: ['auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
+              'double', 'else', 'enum', 'extern', 'float', 'for', 'goto', 'if',
+              'inline', 'int', 'long', 'register', 'return', 'short', 'signed',
+              'sizeof', 'static', 'struct', 'switch', 'typedef', 'union', 'unsigned',
+              'void', 'volatile', 'while', 'class', 'namespace', 'template', 'typename',
+              'public', 'private', 'protected', 'virtual', 'friend', 'operator', 'new',
+              'delete', 'this', 'try', 'catch', 'throw', 'using', 'bool', 'true', 'false',
+              'nullptr', 'constexpr', 'decltype', 'explicit', 'mutable', 'override', 'final'],
+        python: ['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break',
+                 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally',
+                 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal',
+                 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield'],
+        javascript: ['abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case',
+                     'catch', 'char', 'class', 'const', 'continue', 'debugger', 'default',
+                     'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends',
+                     'false', 'final', 'finally', 'float', 'for', 'function', 'goto', 'if',
+                     'implements', 'import', 'in', 'instanceof', 'int', 'interface', 'let',
+                     'long', 'native', 'new', 'null', 'package', 'private', 'protected',
+                     'public', 'return', 'short', 'static', 'super', 'switch', 'synchronized',
+                     'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof', 'var',
+                     'void', 'volatile', 'while', 'with', 'yield', 'async', 'of'],
+        java: ['abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
+               'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum',
+               'extends', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements',
+               'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new', 'package',
+               'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp',
+               'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient',
+               'try', 'void', 'volatile', 'while', 'true', 'false', 'null'],
+        go: ['break', 'case', 'chan', 'const', 'continue', 'default', 'defer', 'else',
+             'fallthrough', 'for', 'func', 'go', 'goto', 'if', 'import', 'interface',
+             'map', 'package', 'range', 'return', 'select', 'struct', 'switch', 'type',
+             'var', 'true', 'false', 'nil'],
+        rust: ['as', 'break', 'const', 'continue', 'crate', 'else', 'enum', 'extern',
+               'false', 'fn', 'for', 'if', 'impl', 'in', 'let', 'loop', 'match', 'mod',
+               'move', 'mut', 'pub', 'ref', 'return', 'self', 'Self', 'static', 'struct',
+               'super', 'trait', 'true', 'type', 'unsafe', 'use', 'where', 'while']
+    };
+    
+    // Map file extensions to language
+    const langMap = {
+        '.c': 'c', '.h': 'c',
+        '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp', '.hpp': 'cpp',
+        '.py': 'python',
+        '.js': 'javascript', '.jsx': 'javascript',
+        '.ts': 'javascript', '.tsx': 'javascript',
+        '.java': 'java',
+        '.go': 'go',
+        '.rs': 'rust'
+    };
+    
+    const lang = langMap[ext] || 'c';
+    const keywords = languageKeywords[lang] || languageKeywords.c;
     
     // Highlight keywords
     keywords.forEach(keyword => {
@@ -171,16 +243,27 @@ function highlightCode(code, ext) {
         code = code.replace(regex, '<span class="keyword">$1</span>');
     });
     
-    // Highlight preprocessor directives
-    code = code.replace(/^(#\s*\w+.*?)$/gm, '<span class="preprocessor">$1</span>');
+    // Highlight preprocessor directives (C/C++)
+    if (['.c', '.cpp', '.h', '.hpp', '.cc', '.cxx'].includes(ext)) {
+        code = code.replace(/^(#\s*\w+.*?)$/gm, '<span class="preprocessor">$1</span>');
+    }
+    
+    // Highlight Python decorators
+    if (ext === '.py') {
+        code = code.replace(/^(\s*@\w+.*?)$/gm, '<span class="preprocessor">$1</span>');
+    }
     
     // Highlight strings
+    code = code.replace(/"""[\s\S]*?"""/g, '<span class="string">$&</span>'); // Python docstrings
+    code = code.replace(/'''[\s\S]*?'''/g, '<span class="string">$&</span>'); // Python docstrings
+    code = code.replace(/`[^`]*`/g, '<span class="string">$&</span>'); // Template literals
     code = code.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, '<span class="string">"$1"</span>');
     code = code.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, '<span class="string">\'$1\'</span>');
     
     // Highlight comments
     code = code.replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>');
     code = code.replace(/\/\/.*/g, '<span class="comment">$&</span>');
+    code = code.replace(/#.*/g, '<span class="comment">$&</span>'); // Python/Shell comments
     
     // Highlight numbers
     code = code.replace(/\b(\d+\.?\d*[fFlLuU]*)\b/g, '<span class="number">$1</span>');

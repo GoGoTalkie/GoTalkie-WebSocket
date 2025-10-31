@@ -22,6 +22,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
 
   const wsService = useRef<WebSocketService>(new WebSocketService());
+  const myNameRef = useRef<string>(''); // เก็บค่า myName ล่าสุด
 
   const showNotification = useCallback((message: string, type: NotificationType = 'info') => {
     setNotification({ message, type });
@@ -51,6 +52,7 @@ function App() {
     if (msg.type === MessageTypes.REGISTER) {
       const name = msg.content?.split(' ').pop() || '';
       setMyName(name);
+      myNameRef.current = name; // อัปเดต ref ด้วย
       setIsLoggedIn(true);
       return;
     }
@@ -66,10 +68,11 @@ function App() {
     }
 
     if (msg.type === MessageTypes.PRIVATE) {
-      const chatKey = msg.from === myName ? msg.to! : msg.from!;
+      const currentMyName = myNameRef.current; // ใช้ค่าจาก ref
+      const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
       
       // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
-      if (msg.from !== myName) {
+      if (msg.from !== currentMyName) {
         setChats((prev) => ({
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
@@ -79,18 +82,30 @@ function App() {
     }
 
     if (msg.type === MessageTypes.GROUP_MESSAGE) {
+      const currentMyName = myNameRef.current; // ใช้ค่าจาก ref
       const chatKey = 'group_' + msg.group_name;
       
+      // Debug: ดูว่า server ส่งอะไรมา
+      // console.log('📩 Received GROUP_MESSAGE:', {
+      //   from: msg.from,
+      //   myName: currentMyName,
+      //   isMyMessage: msg.from === currentMyName,
+      //   content: msg.content
+      // });
+      
       // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
-      if (msg.from !== myName) {
+      if (msg.from !== currentMyName) {
+        // console.log('✅ Adding message from other user');
         setChats((prev) => ({
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+      } else {
+        // console.log('⏭️ Skipping my own message');
       }
       return;
     }
-  }, [myName, showNotification]);
+  }, [showNotification]); // ลบ myName ออกจาก dependency เพราะใช้ ref แทน
 
   const handleConnect = (username: string) => {
     wsService.current.connect(
@@ -140,6 +155,8 @@ function App() {
       wsService.current.send(MessageTypes.PRIVATE, content, currentChat.name);
     } else {
       // เพิ่มข้อความของเราเองลง state ทันที (group)
+      // console.log('📤 Sending GROUP message:', content);
+      
       const myMessage: Message = {
         type: MessageTypes.GROUP_MESSAGE,
         from: myName,
@@ -148,6 +165,7 @@ function App() {
       };
       
       const chatKey = 'group_' + currentChat.name;
+      // console.log('➕ Adding my message to local state');
       setChats((prev) => ({
         ...prev,
         [chatKey]: [...(prev[chatKey] || []), myMessage],

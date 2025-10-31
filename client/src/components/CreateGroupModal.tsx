@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NotificationType } from '../types';
+import { NotificationType, Group } from '../types';
 
 interface CreateGroupModalProps {
   onClose: () => void;
   onCreate: (groupName: string) => void;
   onNotify: (message: string, type: NotificationType) => void;
+  existingGroups: Group[];
 }
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onClose,
   onCreate,
   onNotify,
+  existingGroups,
 }) => {
   const [groupName, setGroupName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +31,16 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     if (name.length < 3) {
       onNotify('Group name must be at least 3 characters', 'warning');
+      return;
+    }
+
+    // Check for duplicate group names
+    const isDuplicate = existingGroups.some(
+      (group) => group.name.toLowerCase() === name.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      onNotify('Group name already exists', 'error');
       return;
     }
 

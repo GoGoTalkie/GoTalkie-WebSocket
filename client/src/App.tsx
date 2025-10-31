@@ -237,6 +237,7 @@ function App() {
           onClose={() => setShowModal(false)}
           onCreate={handleCreateGroup}
           onNotify={showNotification}
+          existingGroups={groups}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Message, Group, Chat, MessageTypes, NotificationType } from './types';
 import { WebSocketService } from './services/websocket';
 import Login from './components/Login';

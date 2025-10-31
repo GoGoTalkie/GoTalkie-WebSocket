@@ -40,9 +40,36 @@
                 </div>
                 <div id="messages"></div>
                 <div id="input-area">
+                    <input type="file" id="file-input" accept=".c,.cpp,.h,.hpp,.cc,.cxx" style="display: none;" />
+                    <button id="file-button" onclick="triggerFileUpload()" title="Attach file">📎</button>
                     <input type="text" id="message-input" placeholder="Type a message..." />
                     <button id="send-button" onclick="sendMessage()">Send</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="file-preview-modal" class="modal-overlay" style="display: none;">
+        <div class="file-modal-container">
+            <div class="modal-header">
+                <h3 id="preview-file-name">File Preview</h3>
+                <button class="modal-close" onclick="closeFilePreview()">&times;</button>
+            </div>
+            <div class="file-modal-body">
+                <div class="file-info">
+                    <span id="file-type-label"></span>
+                    <span id="file-size-label"></span>
+                    <span id="file-lines-label"></span>
+                </div>
+                <div class="code-preview-container">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <pre class="code-content" id="code-content"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeFilePreview()">Close</button>
+                <button class="btn-send-file" onclick="confirmFileSend()">Send File</button>
             </div>
         </div>
     </div>
@@ -51,6 +78,7 @@
     <script src="js/websocket.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/file-handler.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

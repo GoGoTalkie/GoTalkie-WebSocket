@@ -91,7 +91,29 @@ function handleMessage(msg) {
         return;
     }
 
+    if (msg.type === 'file_private') {
+        const chatKey = msg.from === myName ? msg.to : msg.from;
+        if (!chats[chatKey]) chats[chatKey] = [];
+        chats[chatKey].push(msg);
+        if (currentChat && currentChat.type === 'private' && currentChat.name === chatKey) {
+            displayMessages();
+            scrollToBottom();
+        }
+        return;
+    }
+
     if (msg.type === 'group_message') {
+        const chatKey = 'group_' + msg.group_name;
+        if (!chats[chatKey]) chats[chatKey] = [];
+        chats[chatKey].push(msg);
+        if (currentChat && currentChat.type === 'group' && currentChat.name === msg.group_name) {
+            displayMessages();
+            scrollToBottom();
+        }
+        return;
+    }
+
+    if (msg.type === 'file_group') {
         const chatKey = 'group_' + msg.group_name;
         if (!chats[chatKey]) chats[chatKey] = [];
         chats[chatKey].push(msg);

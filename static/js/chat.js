@@ -56,20 +56,28 @@ function displayMessages() {
     const messages = chats[chatKey] || [];
     
     messages.forEach((msg) => {
-        const div = document.createElement('div');
-        div.className = 'message ' + (msg.from === myName ? 'own' : 'other');
+        let messageElement;
         
-        const sender = document.createElement('div');
-        sender.className = 'message-sender';
-        sender.textContent = msg.from;
-        div.appendChild(sender);
+        // Check if it's a file message
+        if (msg.file) {
+            messageElement = renderFileMessage(msg);
+        } else {
+            // Regular text message
+            messageElement = document.createElement('div');
+            messageElement.className = 'message ' + (msg.from === myName ? 'own' : 'other');
+            
+            const sender = document.createElement('div');
+            sender.className = 'message-sender';
+            sender.textContent = msg.from;
+            messageElement.appendChild(sender);
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = msg.content;
+            messageElement.appendChild(content);
+        }
         
-        const content = document.createElement('div');
-        content.className = 'message-content';
-        content.textContent = msg.content;
-        div.appendChild(content);
-        
-        container.appendChild(div);
+        container.appendChild(messageElement);
     });
     
     scrollToBottom();

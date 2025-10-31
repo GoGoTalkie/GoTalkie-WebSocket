@@ -158,6 +158,22 @@ body {
     background: white;
     border-top: 1px solid #ddd;
     flex-shrink: 0;
+    gap: 8px;
+}
+
+#file-button {
+    padding: 10px 15px;
+    background: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s;
+}
+
+#file-button:hover {
+    background: #7f8c8d;
 }
 
 #message-input {
@@ -169,7 +185,6 @@ body {
 
 #send-button {
     padding: 10px 20px;
-    margin-left: 10px;
     background: #3498db;
     color: white;
     border: none;
@@ -442,11 +457,197 @@ body {
     }
 }
 
+/* File Upload Styles */
+.file-attachment {
+    display: inline-flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 12px;
+    max-width: 400px;
+    gap: 12px;
+    margin-top: 5px;
+}
+
+.message.own .file-attachment {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.file-icon {
+    background: #3498db;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 50px;
+    text-transform: uppercase;
+}
+
+.file-info-inline {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    word-break: break-all;
+    font-size: 14px;
+}
+
+.file-size {
+    font-size: 12px;
+    color: #95a5a6;
+}
+
+.file-preview-btn {
+    padding: 8px 16px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.file-preview-btn:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+}
+
+/* File Preview Modal */
+.file-modal-container {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    animation: slideUp 0.3s ease-out;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-modal-body {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.file-info {
+    display: flex;
+    gap: 20px;
+    padding: 16px 24px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e8e8e8;
+    font-size: 13px;
+    color: #555;
+}
+
+.file-info span {
+    font-weight: 500;
+}
+
+.code-preview-container {
+    display: flex;
+    overflow: auto;
+    flex: 1;
+    background: #1e1e1e;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.line-numbers {
+    background: #252526;
+    color: #858585;
+    padding: 20px 10px;
+    text-align: right;
+    user-select: none;
+    min-width: 50px;
+    border-right: 1px solid #3e3e3e;
+}
+
+.line-numbers div {
+    padding: 0 8px;
+}
+
+.code-content {
+    flex: 1;
+    padding: 20px;
+    margin: 0;
+    color: #d4d4d4;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* Syntax Highlighting */
+.code-content .keyword {
+    color: #569cd6;
+    font-weight: 500;
+}
+
+.code-content .string {
+    color: #ce9178;
+}
+
+.code-content .comment {
+    color: #6a9955;
+    font-style: italic;
+}
+
+.code-content .number {
+    color: #b5cea8;
+}
+
+.code-content .function {
+    color: #dcdcaa;
+}
+
+.code-content .preprocessor {
+    color: #c586c0;
+}
+
+.btn-send-file {
+    background-color: #27ae60;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-send-file:hover {
+    background-color: #229954;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .modal-container {
         width: 95%;
         margin: 0 auto;
+    }
+    
+    .file-modal-container {
+        width: 95%;
+        max-height: 90vh;
     }
     
     .notification {
@@ -466,6 +667,14 @@ body {
     .modal-footer {
         padding: 12px 20px 20px;
     }
+    
+    .file-attachment {
+        max-width: 100%;
+    }
+    
+    .code-preview-container {
+        font-size: 12px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -475,5 +684,10 @@ body {
     
     .modal-footer button {
         width: 100%;
+    }
+    
+    .file-info {
+        flex-direction: column;
+        gap: 8px;
     }
 }

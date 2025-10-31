@@ -67,19 +67,27 @@ function App() {
 
     if (msg.type === MessageTypes.PRIVATE) {
       const chatKey = msg.from === myName ? msg.to! : msg.from!;
-      setChats((prev) => ({
-        ...prev,
-        [chatKey]: [...(prev[chatKey] || []), msg],
-      }));
+      
+      // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
+      if (msg.from !== myName) {
+        setChats((prev) => ({
+          ...prev,
+          [chatKey]: [...(prev[chatKey] || []), msg],
+        }));
+      }
       return;
     }
 
     if (msg.type === MessageTypes.GROUP_MESSAGE) {
       const chatKey = 'group_' + msg.group_name;
-      setChats((prev) => ({
-        ...prev,
-        [chatKey]: [...(prev[chatKey] || []), msg],
-      }));
+      
+      // ไม่เพิ่มข้อความที่เราส่งเอง (เพิ่มไปแล้วใน handleSendMessage)
+      if (msg.from !== myName) {
+        setChats((prev) => ({
+          ...prev,
+          [chatKey]: [...(prev[chatKey] || []), msg],
+        }));
+      }
       return;
     }
   }, [myName, showNotification]);
@@ -114,8 +122,38 @@ function App() {
     if (!currentChat) return;
 
     if (currentChat.type === 'private') {
+      // เพิ่มข้อความของเราเองลง state ทันที
+      const myMessage: Message = {
+        type: MessageTypes.PRIVATE,
+        from: myName,
+        to: currentChat.name,
+        content: content,
+      };
+      
+      const chatKey = currentChat.name;
+      setChats((prev) => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), myMessage],
+      }));
+      
+      // ส่งข้อความไปที่ server
       wsService.current.send(MessageTypes.PRIVATE, content, currentChat.name);
     } else {
+      // เพิ่มข้อความของเราเองลง state ทันที (group)
+      const myMessage: Message = {
+        type: MessageTypes.GROUP_MESSAGE,
+        from: myName,
+        group_name: currentChat.name,
+        content: content,
+      };
+      
+      const chatKey = 'group_' + currentChat.name;
+      setChats((prev) => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []), myMessage],
+      }));
+      
+      // ส่งข้อความไปที่ server
       wsService.current.send(MessageTypes.GROUP_MESSAGE, content, undefined, currentChat.name);
     }
   };

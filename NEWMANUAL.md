@@ -28,15 +28,12 @@ cd ..
 ```
 
 Choose:
-- **1** = Development Mode (hot reload) 
-- **2** = Production Mode (optimized build)
+- **1** = Development Mode (Recommended for Coding)
+- **2** = Production Mode 
 
 Run it manually **2 options** :
 
-**Open your browser:**
-- Go to: `http://localhost:8080`
-
-#### Option 1: Development Mode (Recommended for Coding)
+#### Option 1: Development Mode 
 
 This mode gives you **hot reload** - your changes appear instantly without rebuilding!
 

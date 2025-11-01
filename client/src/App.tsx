@@ -294,10 +294,6 @@ function App() {
   };
 
   useEffect(() => {
-    currentChatRef.current = currentChat;
-  }, [currentChat]);
-
-  useEffect(() => {
     return () => {
       wsService.current.close();
     };

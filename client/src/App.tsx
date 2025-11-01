@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Message, Group, Chat, MessageTypes, NotificationType } from './types';
+import { Message, Group, Chat, MessageTypes, NotificationType, UnreadCounts } from './types';
 import { WebSocketService } from './services/websocket';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
@@ -15,6 +15,7 @@ function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<Record<string, Message[]>>({});
+  const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({});
   const [notification, setNotification] = useState<{
     message: string;
     type: NotificationType;
@@ -23,6 +24,7 @@ function App() {
 
   const wsService = useRef<WebSocketService>(new WebSocketService());
   const myNameRef = useRef<string>(''); // Store latest myName value
+  const currentChatRef = useRef<Chat | null>(null); // Store latest currentChat value
 
   const showNotification = useCallback((message: string, type: NotificationType = 'info') => {
     setNotification({ message, type });
@@ -77,6 +79,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }
@@ -91,6 +102,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }
@@ -105,6 +125,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this group chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }
@@ -119,6 +148,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this group chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }
@@ -143,11 +181,30 @@ function App() {
   };
 
   const handleOpenPrivateChat = (user: string) => {
-    setCurrentChat({ type: 'private', name: user });
+    const newChat = { type: 'private' as const, name: user };
+    setCurrentChat(newChat);
+    currentChatRef.current = newChat;
+    
+    // Clear unread count for this chat
+    setUnreadCounts((prev) => {
+      const updated = { ...prev };
+      delete updated[user];
+      return updated;
+    });
   };
 
   const handleOpenGroupChat = (groupName: string) => {
-    setCurrentChat({ type: 'group', name: groupName });
+    const newChat = { type: 'group' as const, name: groupName };
+    setCurrentChat(newChat);
+    currentChatRef.current = newChat;
+    
+    // Clear unread count for this group chat
+    const chatKey = 'group_' + groupName;
+    setUnreadCounts((prev) => {
+      const updated = { ...prev };
+      delete updated[chatKey];
+      return updated;
+    });
   };
 
   const handleSendMessage = (content: string) => {
@@ -260,6 +317,7 @@ function App() {
         users={users}
         groups={groups}
         currentChat={currentChat}
+        unreadCounts={unreadCounts}
         onOpenPrivateChat={handleOpenPrivateChat}
         onOpenGroupChat={handleOpenGroupChat}
         onJoinGroup={handleJoinGroup}

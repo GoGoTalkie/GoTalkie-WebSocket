@@ -25,34 +25,56 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState('');
   const [previewFile, setPreviewFile] = useState<{file: File, content: string} | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isAtBottomRef = useRef(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Check if user is at the bottom
+  const handleScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const isAtBottom =
+      el.scrollHeight - el.scrollTop <= el.clientHeight + 10;
+    isAtBottomRef.current = isAtBottom;
   };
 
+  // Add event listener for scroll
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll when new message arrives
+  useEffect(() => {
+    if (!messages.length) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    // Scroll if last message is ours or user is at bottom
+    if (lastMessage.from === myName || isAtBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      isAtBottomRef.current = true;
+    }
+  }, [messages, myName]);
 
   const handleSend = () => {
     const content = messageInput.trim();
     if (!content || !currentChat) return;
-    
+
     onSendMessage(content);
     setMessageInput('');
+    // Auto-scroll will happen from useEffect above
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSend();
-    }
+    if (e.key === 'Enter') handleSend();
   };
 
   const handleStickerClick = (s: Sticker) => {
     if (!currentChat) return;
-    // Send sticker by id so other clients can map to local assets
     onSendMessage(`sticker:${s.id}`);
   };
 
@@ -126,7 +148,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       <div className="chat-header">
         <h2>{getChatTitle()}</h2>
       </div>
-      <div className="messages">
+
+      <div className="messages" ref={messagesContainerRef}>
         {messages.map((msg, index) => {
           const isSticker = msg.content?.startsWith('sticker:');
           const stickerId = isSticker ? msg.content!.slice('sticker:'.length) : undefined;
@@ -163,6 +186,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         })}
         <div ref={messagesEndRef} />
       </div>
+
       <div className="input-area">
         <button
           className="sticker-button"

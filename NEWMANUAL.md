@@ -209,6 +209,50 @@ app.Static("/", "./static")  // Fallback for old files
 
 ---
 
+## 📎 File Upload Feature
+
+### Overview
+
+GoTalkie now supports uploading and sharing C/C++ source code files with **syntax highlighting** in both private and group chats!
+
+### Supported File Types
+
+| Extension | Type | Max Size |
+|-----------|------|----------|
+| .c | C Source | 1MB |
+| .cpp, .cc, .cxx | C++ Source | 1MB |
+| .h | C/C++ Header | 1MB |
+| .hpp | C++ Header | 1MB |
+
+
+- **Interactive Preview** - View code before sending
+
+- **Line Numbers** - Easy code reference
+
+- **File Info Display** - Name, size, type, line count
+
+- **Group Support** - Share files in group chats
+
+
+**Code Preview Modal:**
+```
+┌─────────────────────────────────────┐
+│ example.c                      [×]  │
+├─────────────────────────────────────┤
+│ C | 2.5 KB | 45 lines               │
+├───┬─────────────────────────────────┤
+│ 1 │ #include <stdio.h>              │
+│ 2 │ int main() {                    │
+│ 3 │     printf("Hello!\n");         │
+│ 4 │     return 0;                   │
+│ 5 │ }                               │
+├───┴─────────────────────────────────┤
+│              [Close]  [Send File]   │
+└─────────────────────────────────────┘
+```
+
+---
+
 
 
 

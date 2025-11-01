@@ -40,7 +40,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     );
     
     if (isDuplicate) {
-      onNotify('Group name already exists', 'error');
+      onNotify('Group already exists', 'error');
       return;
     }
 

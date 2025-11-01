@@ -10,9 +10,18 @@ export const MessageTypes = {
   GROUP_MESSAGE: 'group_message',
   JOIN_GROUP: 'join_group',
   CREATE_GROUP: 'create_group',
+  FILE_PRIVATE: 'file_private',
+  FILE_GROUP: 'file_group',
 } as const;
 
 export type MessageType = typeof MessageTypes[keyof typeof MessageTypes];
+
+export interface FileData {
+  name: string;
+  content: string;
+  size: number;
+  type: string;
+}
 
 export interface Message {
   type: MessageType;
@@ -20,6 +29,7 @@ export interface Message {
   from?: string;
   to?: string;
   group_name?: string;
+  file?: FileData;
   clients?: string[];
   groups?: Group[];
   error?: string;

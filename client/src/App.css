@@ -264,9 +264,37 @@ body {
   background: white;
   border-top: 1px solid #ddd;
   flex-shrink: 0;
+  gap: 8px;
 }
 
-.input-area input {
+.file-button {
+  /* make file button visually consistent with sticker button */
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.08s;
+}
+
+.file-button:hover:not(:disabled) {
+  background: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+.file-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.input-area input[type="text"] {
   flex: 1;
   padding: 10px;
   border: 1px solid #ddd;
@@ -274,14 +302,13 @@ body {
   font-size: 14px;
 }
 
-.input-area input:disabled {
+.input-area input[type="text"]:disabled {
   background: #f5f5f5;
   cursor: not-allowed;
 }
 
-.input-area button {
+.input-area button:not(.file-button) {
   padding: 10px 20px;
-  margin-left: 10px;
   background: #3498db;
   color: white;
   border: none;
@@ -291,11 +318,11 @@ body {
   transition: background 0.2s;
 }
 
-.input-area button:hover:not(:disabled) {
+.input-area button:not(.file-button):hover:not(:disabled) {
   background: #2980b9;
 }
 
-.input-area button:disabled {
+.input-area button:not(.file-button):disabled {
   background: #95a5a6;
   cursor: not-allowed;
 }
@@ -305,7 +332,7 @@ body {
   background: none;
   border: none;
   font-size: 20px;
-  margin-right: 8px;
+  margin-right: 2px;
   cursor: pointer;
   width: 40px;
   height: 40px;

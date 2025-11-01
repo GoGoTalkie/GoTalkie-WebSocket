@@ -15,6 +15,8 @@ const (
 	MsgTypeGroupList    = "group_list"
 	MsgTypeJoinGroup    = "join_group"
 	MsgTypeGroupMessage = "group_message"
+	MsgTypeFilePrivate  = "file_private"
+	MsgTypeFileGroup    = "file_group"
 	MsgTypeError        = "error"
 )
 
@@ -41,12 +43,20 @@ type Hub struct {
 	mu         sync.RWMutex
 }
 
+type FileData struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Size    int    `json:"size"`
+	Type    string `json:"type"`
+}
+
 type Message struct {
 	Type      string      `json:"type"`
 	From      string      `json:"from,omitempty"`
 	To        string      `json:"to,omitempty"`
 	GroupName string      `json:"group_name,omitempty"`
 	Content   string      `json:"content,omitempty"`
+	File      *FileData   `json:"file,omitempty"`
 	Clients   []string    `json:"clients,omitempty"`
 	Groups    []GroupInfo `json:"groups,omitempty"`
 	Error     string      `json:"error,omitempty"`
@@ -204,6 +214,10 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 		h.SendToClient(msg.To, msg)
 		h.SendToClient(msg.From, msg)
 
+	case MsgTypeFilePrivate:
+		h.SendToClient(msg.To, msg)
+		h.SendToClient(msg.From, msg)
+
 	case MsgTypeCreateGroup:
 		h.mu.Lock()
 		if _, exists := h.groups[msg.GroupName]; !exists {
@@ -227,6 +241,9 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 		h.BroadcastGroupList()
 
 	case MsgTypeGroupMessage:
+		h.SendToGroup(msg.GroupName, msg)
+
+	case MsgTypeFileGroup:
 		h.SendToGroup(msg.GroupName, msg)
 	}
 }

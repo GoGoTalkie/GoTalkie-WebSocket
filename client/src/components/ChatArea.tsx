@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import stickers, { Sticker } from '../stickers';
 import { Chat, Message, FileData } from '../types';
 import FilePreviewModal from './FilePreviewModal';
 import FileMessage from './FileMessage';
@@ -19,6 +20,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   onSendFile,
 }) => {
   const [messageInput, setMessageInput] = useState('');
+  const [showStickers, setShowStickers] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState('');
@@ -46,6 +48,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     if (e.key === 'Enter') {
       handleSend();
     }
+  };
+
+  const handleStickerClick = (s: Sticker) => {
+    if (!currentChat) return;
+    // Send sticker by id so other clients can map to local assets
+    onSendMessage(`sticker:${s.id}`);
   };
 
   const handleFileButtonClick = () => {
@@ -119,6 +127,32 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         <h2>{getChatTitle()}</h2>
       </div>
       <div className="messages">
+        {messages.map((msg, index) => {
+          const isSticker = msg.content?.startsWith('sticker:');
+          const stickerId = isSticker ? msg.content!.slice('sticker:'.length) : undefined;
+          const stickerObj = stickerId ? stickers.find((st) => st.id === stickerId) : undefined;
+          return (
+            <div
+              key={index}
+              className={`message ${msg.from === myName ? 'own' : 'other'}`}
+            >
+              <div className="message-sender">{msg.from}</div>
+              <div className={`message-content ${isSticker ? 'sticker-content' : ''}`}>
+                {isSticker ? (
+                  stickerObj ? (
+                    <div className="sticker">
+                      <img src={stickerObj.src} alt={stickerObj.alt} />
+                    </div>
+                  ) : (
+                    <div className="sticker">{stickerId}</div>
+                  )
+                ) : (
+                  msg.content
+                )}
+              </div>
+            </div>
+          );
+        })}
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -138,6 +172,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         <div ref={messagesEndRef} />
       </div>
       <div className="input-area">
+        <button
+          className="sticker-button"
+          onClick={() => setShowStickers((s) => !s)}
+          aria-label="Toggle stickers"
+          disabled={!currentChat}
+        >
+          😊
+        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -165,6 +207,21 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           Send
         </button>
       </div>
+
+      {showStickers && (
+        <div className="sticker-panel">
+          {stickers.map((s) => (
+            <button
+              key={s.id}
+              className="sticker-item"
+              onClick={() => handleStickerClick(s)}
+              aria-label={`Send sticker ${s.alt}`}
+            >
+              <img src={s.src} alt={s.alt} />
+            </button>
+          ))}
+        </div>
+      )}
       {showPreview && selectedFile && (
         <FilePreviewModal
           file={selectedFile}

@@ -72,23 +72,23 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => isMember && onOpenGroupChat(group.name)}
               >
                 <div className="group-header">
-                  <span className="group-name">
-                    {group.name}
+                  <span className="group-name">{group.name}</span>
+                  <div className="group-header-right">
                     {unreadCount > 0 && isMember && (
                       <span className="unread-badge">{unreadCount}</span>
                     )}
-                  </span>
-                  {!isMember && (
-                    <button
-                      className="join-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onJoinGroup(group.name);
-                      }}
-                    >
-                      <span className="join-icon">+</span> Join
-                    </button>
-                  )}
+                    {!isMember && (
+                      <button
+                        className="join-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onJoinGroup(group.name);
+                        }}
+                      >
+                        <span className="join-icon">+</span> Join
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="group-members">
                   <span className="member-icon">👥</span> {group.members.length} member

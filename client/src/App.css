@@ -112,6 +112,9 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .list-item:hover {
@@ -120,6 +123,37 @@ body {
 
 .list-item.active {
   background: #3498db;
+}
+
+/* Unread badge styles */
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #e74c3c;
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 8px;
+  animation: pulse 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .create-button {
@@ -143,10 +177,24 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .group-name {
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.user-name {
+  flex: 1;
+}
+
+.group-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .group-members {

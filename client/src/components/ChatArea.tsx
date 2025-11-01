@@ -131,44 +131,36 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           const isSticker = msg.content?.startsWith('sticker:');
           const stickerId = isSticker ? msg.content!.slice('sticker:'.length) : undefined;
           const stickerObj = stickerId ? stickers.find((st) => st.id === stickerId) : undefined;
+
           return (
             <div
               key={index}
               className={`message ${msg.from === myName ? 'own' : 'other'}`}
             >
               <div className="message-sender">{msg.from}</div>
-              <div className={`message-content ${isSticker ? 'sticker-content' : ''}`}>
-                {isSticker ? (
-                  stickerObj ? (
-                    <div className="sticker">
-                      <img src={stickerObj.src} alt={stickerObj.alt} />
-                    </div>
+              {msg.file ? (
+                <FileMessage 
+                  file={msg.file} 
+                  onPreview={() => handlePreviewReceivedFile(msg.file!)}
+                />
+              ) : (
+                <div className={`message-content ${isSticker ? 'sticker-content' : ''}`}>
+                  {isSticker ? (
+                    stickerObj ? (
+                      <div className="sticker">
+                        <img src={stickerObj.src} alt={stickerObj.alt} />
+                      </div>
+                    ) : (
+                      <div className="sticker">{stickerId}</div>
+                    )
                   ) : (
-                    <div className="sticker">{stickerId}</div>
-                  )
-                ) : (
-                  msg.content
-                )}
-              </div>
+                    msg.content
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`message ${msg.from === myName ? 'own' : 'other'}`}
-          >
-            <div className="message-sender">{msg.from}</div>
-            {msg.file ? (
-              <FileMessage 
-                file={msg.file} 
-                onPreview={() => handlePreviewReceivedFile(msg.file!)}
-              />
-            ) : (
-              <div className="message-content">{msg.content}</div>
-            )}
-          </div>
-        ))}
         <div ref={messagesEndRef} />
       </div>
       <div className="input-area">

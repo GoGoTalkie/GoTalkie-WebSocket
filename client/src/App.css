@@ -268,18 +268,25 @@ body {
 }
 
 .file-button {
-  padding: 10px 15px;
+  /* make file button visually consistent with sticker button */
+  width: 40px;
+  height: 40px;
+  padding: 0;
   background: #95a5a6;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 18px;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.08s;
 }
 
 .file-button:hover:not(:disabled) {
   background: #7f8c8d;
+  transform: translateY(-1px);
 }
 
 .file-button:disabled {
@@ -325,7 +332,7 @@ body {
   background: none;
   border: none;
   font-size: 20px;
-  margin-right: 8px;
+  margin-right: 2px;
   cursor: pointer;
   width: 40px;
   height: 40px;

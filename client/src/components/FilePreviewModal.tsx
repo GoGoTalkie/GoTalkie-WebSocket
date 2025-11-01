@@ -36,12 +36,6 @@ const FILE_TYPES: Record<string, string> = {
 };
 
 const highlightCode = (code: string, ext: string): string => {
-  // Escape HTML
-  let highlighted = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
   // Language-specific keywords
   const languageKeywords: Record<string, string[]> = {
     c: ['auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
@@ -101,39 +95,96 @@ const highlightCode = (code: string, ext: string): string => {
   const lang = langMap[ext] || 'c';
   const keywords = languageKeywords[lang] || languageKeywords.c;
 
-  // Highlight keywords
+  // Use placeholder system to preserve highlighting during HTML escaping
+  const placeholders: Array<{ id: string; html: string }> = [];
+  let placeholderIndex = 0;
+  let highlighted = code;
+
+  // Helper to create placeholder
+  const createPlaceholder = (html: string): string => {
+    const id = `__PLACEHOLDER_${placeholderIndex++}__`;
+    placeholders.push({ id, html });
+    return id;
+  };
+
+  // Helper to escape HTML
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  };
+
+  // 1. Extract and highlight strings (preserve order for nested patterns)
+  highlighted = highlighted.replace(/"""[\s\S]*?"""/g, match => 
+    createPlaceholder(`<span class="string">${escapeHtml(match)}</span>`)
+  );
+  highlighted = highlighted.replace(/'''[\s\S]*?'''/g, match => 
+    createPlaceholder(`<span class="string">${escapeHtml(match)}</span>`)
+  );
+  highlighted = highlighted.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, match => 
+    createPlaceholder(`<span class="string">${escapeHtml(match)}</span>`)
+  );
+  highlighted = highlighted.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, match => 
+    createPlaceholder(`<span class="string">${escapeHtml(match)}</span>`)
+  );
+  highlighted = highlighted.replace(/`[^`]*`/g, match => 
+    createPlaceholder(`<span class="string">${escapeHtml(match)}</span>`)
+  );
+
+  // 2. Extract and highlight preprocessor directives BEFORE comments (C/C++)
+  if (['.c', '.cpp', '.h', '.hpp', '.cc', '.cxx'].includes(ext)) {
+    highlighted = highlighted.replace(/^(#\s*\w+.*?)$/gm, match => 
+      createPlaceholder(`<span class="preprocessor">${escapeHtml(match)}</span>`)
+    );
+  }
+
+  // 3. Extract and highlight Python decorators
+  if (ext === '.py') {
+    highlighted = highlighted.replace(/^(\s*@\w+.*?)$/gm, match => 
+      createPlaceholder(`<span class="preprocessor">${escapeHtml(match)}</span>`)
+    );
+  }
+
+  // 4. Extract and highlight comments
+  // C/C++/Java style block comments
+  highlighted = highlighted.replace(/\/\*[\s\S]*?\*\//g, match => 
+    createPlaceholder(`<span class="comment">${escapeHtml(match)}</span>`)
+  );
+  
+  // C/C++/Java/JavaScript style line comments
+  if (['.c', '.cpp', '.h', '.hpp', '.cc', '.cxx', '.java', '.js', '.jsx', '.ts', '.tsx', '.go', '.rs'].includes(ext)) {
+    highlighted = highlighted.replace(/\/\/.*/g, match => 
+      createPlaceholder(`<span class="comment">${escapeHtml(match)}</span>`)
+    );
+  }
+  
+  // Python/Shell comments (only for specific file types)
+  if (['.py', '.sh'].includes(ext)) {
+    highlighted = highlighted.replace(/#.*/g, match => 
+      createPlaceholder(`<span class="comment">${escapeHtml(match)}</span>`)
+    );
+  }
+
+  // 5. Now escape remaining HTML (actual code content)
+  highlighted = escapeHtml(highlighted);
+
+  // 6. Highlight keywords
   keywords.forEach(keyword => {
     const regex = new RegExp(`\\b(${keyword})\\b`, 'g');
     highlighted = highlighted.replace(regex, '<span class="keyword">$1</span>');
   });
 
-  // Highlight preprocessor directives (C/C++)
-  if (['.c', '.cpp', '.h', '.hpp', '.cc', '.cxx'].includes(ext)) {
-    highlighted = highlighted.replace(/^(#\s*\w+.*?)$/gm, '<span class="preprocessor">$1</span>');
-  }
-
-  // Highlight Python decorators
-  if (ext === '.py') {
-    highlighted = highlighted.replace(/^(\s*@\w+.*?)$/gm, '<span class="preprocessor">$1</span>');
-  }
-
-  // Highlight strings
-  highlighted = highlighted.replace(/"""[\s\S]*?"""/g, '<span class="string">$&</span>');
-  highlighted = highlighted.replace(/'''[\s\S]*?'''/g, '<span class="string">$&</span>');
-  highlighted = highlighted.replace(/`[^`]*`/g, '<span class="string">$&</span>');
-  highlighted = highlighted.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, '<span class="string">"$1"</span>');
-  highlighted = highlighted.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, '<span class="string">\'$1\'</span>');
-
-  // Highlight comments
-  highlighted = highlighted.replace(/\/\*[\s\S]*?\*\//g, '<span class="comment">$&</span>');
-  highlighted = highlighted.replace(/\/\/.*/g, '<span class="comment">$&</span>');
-  highlighted = highlighted.replace(/#.*/g, '<span class="comment">$&</span>');
-
-  // Highlight numbers
+  // 7. Highlight numbers
   highlighted = highlighted.replace(/\b(\d+\.?\d*[fFlLuU]*)\b/g, '<span class="number">$1</span>');
 
-  // Highlight function calls
+  // 8. Highlight function calls
   highlighted = highlighted.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="function">$1</span>(');
+
+  // 9. Restore all placeholders
+  placeholders.forEach(({ id, html }) => {
+    highlighted = highlighted.replace(id, html);
+  });
 
   return highlighted;
 };

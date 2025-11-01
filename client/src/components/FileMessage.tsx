@@ -36,6 +36,23 @@ const FileMessage: React.FC<FileMessageProps> = ({ file, onPreview }) => {
   const ext = '.' + file.name.split('.').pop()?.toLowerCase();
   const fileType = FILE_TYPES[ext] || 'File';
   const sizeKB = (file.size / 1024).toFixed(2);
+  const onDownload = () => {
+    try {
+      // Create a blob from the file content and trigger a download
+      const blob = new Blob([file.content], { type: file.type || 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Release the object URL after a short delay to ensure download starts
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('Download failed', err);
+    }
+  };
 
   return (
     <div className="file-attachment">
@@ -44,9 +61,14 @@ const FileMessage: React.FC<FileMessageProps> = ({ file, onPreview }) => {
         <div className="file-name">{file.name}</div>
         <div className="file-size">{sizeKB} KB</div>
       </div>
-      <button className="file-preview-btn" onClick={onPreview}>
-        👁️ Preview
-      </button>
+      <div className="file-actions">
+        <button className="file-preview-btn" onClick={onPreview} title="Preview file">
+          👁️ Preview
+        </button>
+        <button className="file-download-btn" onClick={onDownload} title="Download file">
+          ⤓ Download
+        </button>
+      </div>
     </div>
   );
 };

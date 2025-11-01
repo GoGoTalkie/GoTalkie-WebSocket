@@ -189,6 +189,30 @@
   transform: translateY(-1px);
 }
 
+/* File action buttons container */
+.file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.file-download-btn {
+  padding: 8px 16px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.file-download-btn:hover {
+  background: #27ae60;
+  transform: translateY(-1px);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .file-modal-container {

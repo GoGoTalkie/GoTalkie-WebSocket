@@ -30,7 +30,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isAtBottomRef = useRef(true);
 
-  // ตรวจสอบว่าผู้ใช้อยู่ล่างสุดหรือไม่
+  // Check if user is at the bottom
   const handleScroll = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -39,7 +39,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     isAtBottomRef.current = isAtBottom;
   };
 
-  // ติด event listener สำหรับ scroll
+  // Add event listener for scroll
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -47,13 +47,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     return () => el.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // scroll เมื่อ message ใหม่เข้ามา
+  // Scroll when new message arrives
   useEffect(() => {
     if (!messages.length) return;
 
     const lastMessage = messages[messages.length - 1];
 
-    // scroll ถ้า message สุดท้ายเป็นของเรา หรือ user อยู่ล่างสุด
+    // Scroll if last message is ours or user is at bottom
     if (lastMessage.from === myName || isAtBottomRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       isAtBottomRef.current = true;
@@ -66,7 +66,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
     onSendMessage(content);
     setMessageInput('');
-    // auto-scroll จะเกิดจาก useEffect ด้านบน
+    // Auto-scroll will happen from useEffect above
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

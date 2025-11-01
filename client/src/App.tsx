@@ -139,8 +139,6 @@ function App() {
             [chatKey]: (prev[chatKey] || 0) + 1,
           }));
         }
-      } else {
-        // console.log('⏭️ Skipping my own message');
       }
       return;
     }

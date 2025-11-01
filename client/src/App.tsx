@@ -102,6 +102,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }
@@ -116,6 +125,15 @@ function App() {
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
+        
+        // Increment unread count if this group chat is not currently open
+        const currentOpenChat = currentChatRef.current;
+        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatKey]: (prev[chatKey] || 0) + 1,
+          }));
+        }
       }
       return;
     }

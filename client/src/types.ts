@@ -45,4 +45,8 @@ export interface Chat {
   name: string;
 }
 
+export interface UnreadCounts {
+  [chatKey: string]: number;
+}
+
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';

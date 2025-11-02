@@ -1,11 +1,12 @@
 import React from 'react';
-import { Group, Chat } from '../types';
+import { Group, Chat, UnreadCounts } from '../types';
 
 interface SidebarProps {
   myName: string;
   users: string[];
   groups: Group[];
   currentChat: Chat | null;
+  unreadCounts: UnreadCounts;
   onOpenPrivateChat: (user: string) => void;
   onOpenGroupChat: (groupName: string) => void;
   onJoinGroup: (groupName: string) => void;
@@ -17,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   users,
   groups,
   currentChat,
+  unreadCounts,
   onOpenPrivateChat,
   onOpenGroupChat,
   onJoinGroup,
@@ -35,13 +37,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           {users.map((user) => {
             if (user === myName) return null;
             const isActive = currentChat?.type === 'private' && currentChat.name === user;
+            const unreadCount = unreadCounts[user] || 0;
             return (
               <div
                 key={user}
                 className={`list-item user-item ${isActive ? 'active' : ''}`}
                 onClick={() => onOpenPrivateChat(user)}
               >
-                {user}
+                <span className="user-name">{user}</span>
+                {unreadCount > 0 && (
+                  <span className="unread-badge">{unreadCount}</span>
+                )}
               </div>
             );
           })}
@@ -57,6 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           {groups.map((group) => {
             const isActive = currentChat?.type === 'group' && currentChat.name === group.name;
             const isMember = group.members.includes(myName);
+            const chatKey = 'group_' + group.name;
+            const unreadCount = unreadCounts[chatKey] || 0;
             return (
               <div
                 key={group.name}
@@ -65,17 +73,22 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 <div className="group-header">
                   <span className="group-name">{group.name}</span>
-                  {!isMember && (
-                    <button
-                      className="join-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onJoinGroup(group.name);
-                      }}
-                    >
-                      <span className="join-icon">+</span> Join
-                    </button>
-                  )}
+                  <div className="group-header-right">
+                    {unreadCount > 0 && isMember && (
+                      <span className="unread-badge">{unreadCount}</span>
+                    )}
+                    {!isMember && (
+                      <button
+                        className="join-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onJoinGroup(group.name);
+                        }}
+                      >
+                        <span className="join-icon">+</span> Join
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="group-members">
                   <span className="member-icon">👥</span> {group.members.length} member

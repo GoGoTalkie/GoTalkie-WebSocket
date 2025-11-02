@@ -250,7 +250,6 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 			group.mu.Lock()
 			delete(group.Members, client.Name)
 			group.mu.Unlock()
-		} else {
 		}
 		h.mu.Unlock()
 		h.BroadcastGroupList()

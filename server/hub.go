@@ -144,7 +144,6 @@ func (h *Hub) BroadcastGroupList() {
 	h.mu.RUnlock()
 
 	msg := Message{Type: MsgTypeGroupList, Groups: groupInfos}
-	println("Broadcasting GROUP_LIST with", len(groupInfos), "groups")
 	h.Broadcast(msg)
 }
 
@@ -246,19 +245,15 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 		h.BroadcastGroupList()
 
 	case MsgTypeLeaveGroup:
-		println("Received LEAVE_GROUP message from:", client.Name, "Group:", msg.GroupName)
 		h.mu.Lock()
 		if group, exists := h.groups[msg.GroupName]; exists {
 			group.mu.Lock()
 			delete(group.Members, client.Name)
-			println("Removed", client.Name, "from group", msg.GroupName)
 			group.mu.Unlock()
 		} else {
-			println("Group", msg.GroupName, "not found")
 		}
 		h.mu.Unlock()
 		h.BroadcastGroupList()
-		println("Broadcasted group list after leave")
 
 	case MsgTypeGroupMessage:
 		h.SendToGroup(msg.GroupName, msg)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/GoGoTalkie/GoTalkie-WebSocket/server"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"
 )
 
@@ -16,6 +17,14 @@ func main() {
 	go hub.Run()
 
 	app := fiber.New()
+	
+	// Enable CORS for all routes (required for Cloud Run)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+	}))
+	
 	// Serve React build files or fallback to static folder
 	app.Static("/", "./client/dist", fiber.Static{
 		Compress:  true,
@@ -36,8 +45,10 @@ func main() {
 
 	app.Get("/ws", websocket.New(handleWebSocket))
 
-	log.Println("Server starting on http://localhost:8080")
-	log.Fatal(app.Listen(":8080"))
+	// Listen on 0.0.0.0 to accept connections from any network interface
+	// This is required for Cloud Run and works fine for local development
+	log.Println("Server starting on http://0.0.0.0:8080")
+	log.Fatal(app.Listen("0.0.0.0:8080"))
 }
 
 func handleWebSocket(c *websocket.Conn) {

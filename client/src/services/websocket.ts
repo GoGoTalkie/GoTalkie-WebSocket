@@ -5,8 +5,17 @@ export class WebSocketService {
   private messageHandler: ((msg: Message) => void) | null = null;
   private url: string;
 
-  constructor(url: string = 'ws://localhost:8080/ws') {
-    this.url = url;
+  constructor(url?: string) {
+    // Auto-detect WebSocket URL based on environment
+    if (url) {
+      this.url = url;
+    } else {
+      // Use environment variable if available, otherwise auto-detect
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = import.meta.env.VITE_WS_URL || window.location.host || 'localhost:8080';
+      this.url = `${wsProtocol}//${wsHost}/ws`;
+    }
+    console.log('WebSocket URL:', this.url);
   }
 
   connect(

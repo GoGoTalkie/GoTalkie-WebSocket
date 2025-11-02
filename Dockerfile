@@ -41,9 +41,6 @@ COPY --from=go_builder --chown=nonroot:nonroot /app/bin/server /app/server
 # Copy built frontend into the location the Go server expects (client/dist)
 COPY --from=node_builder --chown=nonroot:nonroot /app/client/dist /app/client/dist
 
-# Fallback static (if any)
-COPY --from=go_builder --chown=nonroot:nonroot /app/static /app/static
-
 USER nonroot:nonroot
 WORKDIR /app
 EXPOSE 8080

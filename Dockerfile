@@ -1,39 +1,50 @@
-# Build stage
-FROM golang:1.24.3-alpine AS builder
-# Install build dependencies
-RUN apk add --no-cache git
+# Multi-stage Dockerfile that builds the React (Vite) frontend and the Go server
 
-# Set working directory
+########## Frontend build stage (Node) ##########
+FROM node:20-alpine AS node_builder
+WORKDIR /app/client
+
+# Install build dependencies
+COPY client/package.json client/package-lock.json* ./
+RUN npm ci --silent
+
+# Copy frontend source and build
+COPY client/ ./
+RUN npm run build
+
+
+########## Go build stage ##########
+FROM golang:1.24.3-alpine AS go_builder
+RUN apk add --no-cache git ca-certificates
 WORKDIR /app
 
-# Copy go mod files
+# Copy go module files and download
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy source code
+# Copy the rest of the source (including cmd/, server/, etc.)
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/server ./cmd/server
+# Build the Go server (static binary)
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags "-w -s" -o bin/server ./cmd/server
 
-# Final stage
-FROM alpine:latest
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates
+########## Final runtime stage (distroless) ##########
+FROM gcr.io/distroless/static-debian12:nonroot
 
-WORKDIR /root/
+# Copy CA certs from builder so HTTPS works
+COPY --from=go_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Copy binary from builder
-COPY --from=builder /app/bin/server .
+# Create app directory and copy server binary
+COPY --from=go_builder --chown=nonroot:nonroot /app/bin/server /app/server
 
-# Copy static files
-COPY --from=builder /app/static ./static
+# Copy built frontend into the location the Go server expects (client/dist)
+COPY --from=node_builder --chown=nonroot:nonroot /app/client/dist /app/client/dist
 
-# Expose port
+# Fallback static (if any)
+COPY --from=go_builder --chown=nonroot:nonroot /app/static /app/static
+
+USER nonroot:nonroot
+WORKDIR /app
 EXPOSE 8080
-
-# Run the application
-CMD ["./server"]
+ENTRYPOINT ["/app/server"]

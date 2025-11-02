@@ -15,7 +15,7 @@ export class WebSocketService {
       const wsHost = import.meta.env.VITE_WS_URL || window.location.host || 'localhost:8080';
       this.url = `${wsProtocol}//${wsHost}/ws`;
     }
-    console.log('WebSocket URL:', this.url);
+    // console.log('WebSocket URL:', this.url);
   }
 
   connect(
@@ -54,6 +54,7 @@ export class WebSocketService {
       if (to !== undefined) message.to = to;
       if (group_name !== undefined) message.group_name = group_name;
       
+      // console.log('Sending WebSocket message:', message);
       this.ws.send(JSON.stringify(message));
     }
   }
@@ -71,13 +72,13 @@ export class WebSocketService {
         message.group_name = target;
       }
       
-      console.log('Sending file message:', {
-        type: message.type,
-        to: message.to,
-        group_name: message.group_name,
-        fileName: file.name,
-        fileSize: file.size
-      });
+      // console.log('Sending file message:', {
+      //   type: message.type,
+      //   to: message.to,
+      //   group_name: message.group_name,
+      //   fileName: file.name,
+      //   fileSize: file.size
+      // });
       
       this.ws.send(JSON.stringify(message));
     }

@@ -9,6 +9,7 @@ export const MessageTypes = {
   PRIVATE: 'private',
   GROUP_MESSAGE: 'group_message',
   JOIN_GROUP: 'join_group',
+  LEAVE_GROUP: 'leave_group',
   CREATE_GROUP: 'create_group',
   FILE_PRIVATE: 'file_private',
   FILE_GROUP: 'file_group',

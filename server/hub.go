@@ -14,6 +14,7 @@ const (
 	MsgTypeCreateGroup  = "create_group"
 	MsgTypeGroupList    = "group_list"
 	MsgTypeJoinGroup    = "join_group"
+	MsgTypeLeaveGroup   = "leave_group"
 	MsgTypeGroupMessage = "group_message"
 	MsgTypeFilePrivate  = "file_private"
 	MsgTypeFileGroup    = "file_group"
@@ -143,20 +144,24 @@ func (h *Hub) BroadcastGroupList() {
 	h.mu.RUnlock()
 
 	msg := Message{Type: MsgTypeGroupList, Groups: groupInfos}
+	println("Broadcasting GROUP_LIST with", len(groupInfos), "groups")
 	h.Broadcast(msg)
 }
 
 func (h *Hub) Broadcast(msg Message) {
 	data, _ := json.Marshal(msg)
 	h.mu.RLock()
-	defer h.mu.RUnlock()
-
+	clients := make([]*Client, 0, len(h.clients))
 	for _, client := range h.clients {
+		clients = append(clients, client)
+	}
+	h.mu.RUnlock()
+
+	for _, client := range clients {
 		select {
 		case client.Send <- data:
 		default:
-			close(client.Send)
-			delete(h.clients, client.Name)
+			// Skip if channel is full
 		}
 	}
 }
@@ -239,6 +244,21 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 		}
 		h.mu.Unlock()
 		h.BroadcastGroupList()
+
+	case MsgTypeLeaveGroup:
+		println("Received LEAVE_GROUP message from:", client.Name, "Group:", msg.GroupName)
+		h.mu.Lock()
+		if group, exists := h.groups[msg.GroupName]; exists {
+			group.mu.Lock()
+			delete(group.Members, client.Name)
+			println("Removed", client.Name, "from group", msg.GroupName)
+			group.mu.Unlock()
+		} else {
+			println("Group", msg.GroupName, "not found")
+		}
+		h.mu.Unlock()
+		h.BroadcastGroupList()
+		println("Broadcasted group list after leave")
 
 	case MsgTypeGroupMessage:
 		h.SendToGroup(msg.GroupName, msg)

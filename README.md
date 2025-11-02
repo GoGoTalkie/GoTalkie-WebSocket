@@ -100,6 +100,36 @@ All requirements R3-R11 are fully implemented:
 - Messages broadcast only to group members
 - Non-members cannot see group messages
 
+## ✨ Extra Feature: File Upload with Code Preview
+
+### Overview
+GoTalkie now supports uploading and sharing C/C++ source code files with real-time syntax highlighting and preview!
+
+**Features:**
+- 📎 Upload C/C++ files (.c, .cpp, .h, .hpp, .cc, .cxx)
+- 👁️ Preview with syntax highlighting before sending
+- 💬 Share files in private chats or groups
+- 🎨 Professional dark-theme code viewer
+- 📊 Line numbers and file info display
+- 🚀 Files up to 1MB supported
+
+**Quick Start:**
+1. Click the 📎 button next to message input
+2. Select a C/C++ file
+3. Preview the code with syntax highlighting
+4. Click "Send File" to share
+5. Recipients can click "👁️ Preview" to view
+
+**Documentation:**
+- [Complete Feature Documentation](FILE_UPLOAD_FEATURE.md)
+- [Quick Reference Guide](FILE_UPLOAD_QUICKSTART.md)
+- [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
+- [Visual Guide](VISUAL_GUIDE.md)
+
+**Example Files:**
+- `example_test.c` - Sample C program
+- `example_test.cpp` - Sample C++ program
+
 ## Project Structure
 
 ```
@@ -110,9 +140,23 @@ GoTalkie-WebSocket/
 ├── server/
 │   └── hub.go                # Hub logic: clients, groups, message routing
 ├── static/
-│   └── index.html            # Web client UI (HTML/CSS/JS)
+│   ├── index.html            # Web client UI
+│   ├── style.css             # Application styles
+│   ├── script.js             # Legacy JavaScript
+│   └── js/
+│       ├── websocket.js      # WebSocket connection handling
+│       ├── chat.js           # Chat message display
+│       ├── ui.js             # UI utilities
+│       ├── main.js           # Entry point
+│       └── file-handler.js   # 📎 NEW: File upload & preview
 ├── bin/
 │   └── server                # Compiled server binary
+├── example_test.c            # 📎 NEW: C example file
+├── example_test.cpp          # 📎 NEW: C++ example file
+├── FILE_UPLOAD_FEATURE.md    # 📎 NEW: Feature documentation
+├── FILE_UPLOAD_QUICKSTART.md # 📎 NEW: Quick reference
+├── IMPLEMENTATION_SUMMARY.md # 📎 NEW: Implementation details
+├── VISUAL_GUIDE.md           # 📎 NEW: Visual guide
 ├── go.mod                    # Go module dependencies
 ├── go.sum                    # Dependency checksums
 └── README.md                 # This file
@@ -179,6 +223,14 @@ The server will start on `http://localhost:8080`
 4. Other users can click "Join" button to join the group
 5. Click on group name to open group chat
 6. Send messages - only group members will see them
+
+**File Upload & Sharing (NEW):**
+1. Open a private chat or group chat
+2. Click the 📎 (paperclip) button
+3. Select a C/C++ file from your computer
+4. Review the syntax-highlighted preview
+5. Click "Send File" to share with recipient(s)
+6. Recipients click "👁️ Preview" to view the code
 
 ## Testing Requirements
 

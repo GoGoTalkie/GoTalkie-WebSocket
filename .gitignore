@@ -6,3 +6,8 @@ dist
 .github/instructions/snyk_rules.instructions.md
 
 client/node_modules/
+
+# Environment variables
+
+client/.env.development
+client/.env.production

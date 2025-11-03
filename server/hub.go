@@ -249,7 +249,14 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 		if group, exists := h.groups[msg.GroupName]; exists {
 			group.mu.Lock()
 			delete(group.Members, client.Name)
-			group.mu.Unlock()
+
+			// If the group is now empty after the member left, delete it
+			if len(group.Members) == 0 {
+				group.mu.Unlock()
+				delete(h.groups, msg.GroupName)
+			} else {
+				group.mu.Unlock()
+			}
 		}
 		h.mu.Unlock()
 		h.BroadcastGroupList()

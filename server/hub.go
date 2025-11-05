@@ -14,6 +14,7 @@ const (
 	MsgTypeCreateGroup  = "create_group"
 	MsgTypeGroupList    = "group_list"
 	MsgTypeJoinGroup    = "join_group"
+	MsgTypeLeaveGroup   = "leave_group"
 	MsgTypeGroupMessage = "group_message"
 	MsgTypeFilePrivate  = "file_private"
 	MsgTypeFileGroup    = "file_group"
@@ -149,14 +150,17 @@ func (h *Hub) BroadcastGroupList() {
 func (h *Hub) Broadcast(msg Message) {
 	data, _ := json.Marshal(msg)
 	h.mu.RLock()
-	defer h.mu.RUnlock()
-
+	clients := make([]*Client, 0, len(h.clients))
 	for _, client := range h.clients {
+		clients = append(clients, client)
+	}
+	h.mu.RUnlock()
+
+	for _, client := range clients {
 		select {
 		case client.Send <- data:
 		default:
-			close(client.Send)
-			delete(h.clients, client.Name)
+			// Skip if channel is full
 		}
 	}
 }
@@ -236,6 +240,23 @@ func (h *Hub) HandleMessage(client *Client, data []byte) {
 			group.mu.Lock()
 			group.Members[client.Name] = true
 			group.mu.Unlock()
+		}
+		h.mu.Unlock()
+		h.BroadcastGroupList()
+
+	case MsgTypeLeaveGroup:
+		h.mu.Lock()
+		if group, exists := h.groups[msg.GroupName]; exists {
+			group.mu.Lock()
+			delete(group.Members, client.Name)
+
+			// If the group is now empty after the member left, delete it
+			if len(group.Members) == 0 {
+				group.mu.Unlock()
+				delete(h.groups, msg.GroupName)
+			} else {
+				group.mu.Unlock()
+			}
 		}
 		h.mu.Unlock()
 		h.BroadcastGroupList()

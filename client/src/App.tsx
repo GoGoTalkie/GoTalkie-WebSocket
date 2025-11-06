@@ -31,137 +31,110 @@ function App() {
     setTimeout(() => setNotification(null), 3000);
   }, []);
 
+  // Helper function to add message to chat and update unread count
+  const addMessageToChat = useCallback((msg: Message, chatKey: string, expectedChatType: 'private' | 'group') => {
+    const currentMyName = myNameRef.current;
+    
+    // Don't add our own messages (already added when sending)
+    if (msg.from === currentMyName) return;
+    
+    setChats((prev) => ({
+      ...prev,
+      [chatKey]: [...(prev[chatKey] || []), msg],
+    }));
+    
+    // Update unread count if chat is not currently open
+    const currentOpenChat = currentChatRef.current;
+    const isChatOpen = currentOpenChat?.type === expectedChatType && 
+      (expectedChatType === 'private' ? currentOpenChat.name === chatKey : 'group_' + currentOpenChat.name === chatKey);
+    
+    if (!isChatOpen) {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [chatKey]: (prev[chatKey] || 0) + 1,
+      }));
+    }
+  }, []);
+
+  // Helper function to handle private messages
+  const handlePrivateMessage = useCallback((msg: Message) => {
+    const currentMyName = myNameRef.current;
+    const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
+    addMessageToChat(msg, chatKey, 'private');
+  }, [addMessageToChat]);
+
+  // Helper function to handle group messages
+  const handleGroupMessage = useCallback((msg: Message) => {
+    const chatKey = 'group_' + msg.group_name;
+    addMessageToChat(msg, chatKey, 'group');
+  }, [addMessageToChat]);
+
+  // Helper function to handle authentication/connection messages
+  const handleAuthMessage = useCallback((msg: Message) => {
+    switch (msg.type) {
+      case MessageTypes.ERROR:
+        showNotification(msg.error || 'An error occurred', 'error');
+        break;
+      case MessageTypes.DUPLICATE_LOGIN:
+        showNotification('This account is being logged in from another location', 'warning');
+        break;
+      case MessageTypes.KICKED:
+        showNotification('You have been disconnected due to login from another device', 'warning');
+        setTimeout(() => {
+          wsService.current.close();
+          window.location.reload();
+        }, 2000);
+        break;
+      case MessageTypes.REGISTER:
+        const name = msg.content?.split(' ').pop() || '';
+        setMyName(name);
+        myNameRef.current = name;
+        setIsLoggedIn(true);
+        break;
+    }
+  }, [showNotification]);
+
+  // Helper function to handle list updates
+  const handleListUpdate = useCallback((msg: Message) => {
+    switch (msg.type) {
+      case MessageTypes.CLIENT_LIST:
+        setUsers(msg.clients || []);
+        break;
+      case MessageTypes.GROUP_LIST:
+        setGroups(msg.groups || []);
+        break;
+    }
+  }, []);
+
   const handleMessage = useCallback((msg: Message) => {
-    if (msg.type === MessageTypes.ERROR) {
-      showNotification(msg.error || 'An error occurred', 'error');
+    // Handle authentication and connection messages
+    const authTypes = [MessageTypes.ERROR, MessageTypes.DUPLICATE_LOGIN, MessageTypes.KICKED, MessageTypes.REGISTER] as const;
+    if ((authTypes as readonly string[]).includes(msg.type)) {
+      handleAuthMessage(msg);
       return;
     }
 
-    if (msg.type === MessageTypes.DUPLICATE_LOGIN) {
-      showNotification('This account is being logged in from another location', 'warning');
+    // Handle list updates
+    const listTypes = [MessageTypes.CLIENT_LIST, MessageTypes.GROUP_LIST] as const;
+    if ((listTypes as readonly string[]).includes(msg.type)) {
+      handleListUpdate(msg);
       return;
     }
 
-    if (msg.type === MessageTypes.KICKED) {
-      showNotification('You have been disconnected due to login from another device', 'warning');
-      setTimeout(() => {
-        wsService.current.close();
-        window.location.reload();
-      }, 2000);
+    // Handle private messages and files
+    const privateTypes = [MessageTypes.PRIVATE, MessageTypes.FILE_PRIVATE] as const;
+    if ((privateTypes as readonly string[]).includes(msg.type)) {
+      handlePrivateMessage(msg);
       return;
     }
 
-    if (msg.type === MessageTypes.REGISTER) {
-      const name = msg.content?.split(' ').pop() || '';
-      setMyName(name);
-      myNameRef.current = name; // Update ref
-      setIsLoggedIn(true);
+    // Handle group messages and files
+    const groupTypes = [MessageTypes.GROUP_MESSAGE, MessageTypes.FILE_GROUP] as const;
+    if ((groupTypes as readonly string[]).includes(msg.type)) {
+      handleGroupMessage(msg);
       return;
     }
-
-    if (msg.type === MessageTypes.CLIENT_LIST) {
-      setUsers(msg.clients || []);
-      return;
-    }
-
-    if (msg.type === MessageTypes.GROUP_LIST) {
-      // console.log('Received GROUP_LIST:', msg.groups);
-      setGroups(msg.groups || []);
-      return;
-    }
-
-    if (msg.type === MessageTypes.PRIVATE) {
-      const currentMyName = myNameRef.current; // Get value from ref
-      const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
-      
-      // Don't add our own message (already added in handleSendMessage)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-
-    if (msg.type === MessageTypes.FILE_PRIVATE) {
-      const currentMyName = myNameRef.current;
-      const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
-      
-      // Don't add our own message (already added in handleSendFile)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-
-    if (msg.type === MessageTypes.GROUP_MESSAGE) {
-      const currentMyName = myNameRef.current; // Get value from ref
-      const chatKey = 'group_' + msg.group_name;
-      
-      // Don't add our own message (already added in handleSendMessage)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this group chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-
-    if (msg.type === MessageTypes.FILE_GROUP) {
-      const currentMyName = myNameRef.current;
-      const chatKey = 'group_' + msg.group_name;
-      
-      // Don't add our own message (already added in handleSendFile)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this group chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-  }, [showNotification]); // Removed myName from dependency, using ref instead
+  }, [handleAuthMessage, handleListUpdate, handlePrivateMessage, handleGroupMessage]);
 
   const handleConnect = (username: string) => {
     wsService.current.connect(

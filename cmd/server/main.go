@@ -32,8 +32,6 @@ func main() {
 		Browse:    false,
 		Index:     "index.html",
 	})
-	// Fallback for old static files (if client/dist doesn't exist)
-	app.Static("/", "./static")
 
 	app.Use("/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {

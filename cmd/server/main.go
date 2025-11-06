@@ -58,18 +58,6 @@ func handleWebSocket(c *websocket.Conn) {
 		return
 	}
 
-	if regMsg.Type != server.MsgTypeRegister || regMsg.Content == "" {
-		c.WriteJSON(server.Message{Type: server.MsgTypeError, Error: "Must register first"})
-		c.Close()
-		return
-	}
-
-	// if hub.ClientExists(regMsg.Content) {
-	// 	c.WriteJSON(server.Message{Type: server.MsgTypeError, Error: "Name taken"})
-	// 	c.Close()
-	// 	return
-	// }
-
 	if hub.ClientExists(regMsg.Content) {
 		c.WriteControl(websocket.CloseMessage,
 			websocket.FormatCloseMessage(4001, "Username already in use"),

@@ -70,7 +70,7 @@ function App() {
       return;
     }
 
-    if (msg.type === MessageTypes.PRIVATE) {
+    if (msg.type === MessageTypes.PRIVATE || msg.type === MessageTypes.FILE_PRIVATE) {
       const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
       
@@ -93,57 +93,11 @@ function App() {
       return;
     }
 
-    if (msg.type === MessageTypes.FILE_PRIVATE) {
-      const currentMyName = myNameRef.current;
-      const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
-      
-      // Don't add our own message (already added in handleSendFile)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-
-    if (msg.type === MessageTypes.GROUP_MESSAGE) {
+    if (msg.type === MessageTypes.GROUP_MESSAGE || msg.type === MessageTypes.FILE_GROUP) {
       const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = 'group_' + msg.group_name;
       
       // Don't add our own message (already added in handleSendMessage)
-      if (msg.from !== currentMyName) {
-        setChats((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] || []), msg],
-        }));
-        
-        // Increment unread count if this group chat is not currently open
-        const currentOpenChat = currentChatRef.current;
-        if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatKey]: (prev[chatKey] || 0) + 1,
-          }));
-        }
-      }
-      return;
-    }
-
-    if (msg.type === MessageTypes.FILE_GROUP) {
-      const currentMyName = myNameRef.current;
-      const chatKey = 'group_' + msg.group_name;
-      
-      // Don't add our own message (already added in handleSendFile)
       if (msg.from !== currentMyName) {
         setChats((prev) => ({
           ...prev,

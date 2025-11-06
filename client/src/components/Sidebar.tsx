@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Group, Chat, UnreadCounts } from '../types';
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   onOpenPrivateChat: (user: string) => void;
   onOpenGroupChat: (groupName: string) => void;
   onJoinGroup: (groupName: string) => void;
+  onLeaveGroup: (groupName: string) => void;
   onCreateGroup: () => void;
 }
 
@@ -22,8 +23,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   onOpenPrivateChat,
   onOpenGroupChat,
   onJoinGroup,
+  onLeaveGroup,
   onCreateGroup,
 }) => {
+  const [processingGroup, setProcessingGroup] = useState<string | null>(null);
   return (
     <div className="sidebar">
       <div className="section">
@@ -77,13 +80,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {unreadCount > 0 && isMember && (
                       <span className="unread-badge">{unreadCount}</span>
                     )}
-                    {!isMember && (
+                    {isMember ? (
+                      <button
+                        className="join-button leave-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (processingGroup === group.name) return;
+                          setProcessingGroup(group.name);
+                          onLeaveGroup(group.name);
+                          setTimeout(() => setProcessingGroup(null), 1000);
+                        }}
+                        disabled={processingGroup === group.name}
+                      >
+                        <span className="join-icon">−</span> Leave
+                      </button>
+                    ) : (
                       <button
                         className="join-button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (processingGroup === group.name) return;
+                          setProcessingGroup(group.name);
                           onJoinGroup(group.name);
+                          setTimeout(() => setProcessingGroup(null), 1000);
                         }}
+                        disabled={processingGroup === group.name}
                       >
                         <span className="join-icon">+</span> Join
                       </button>

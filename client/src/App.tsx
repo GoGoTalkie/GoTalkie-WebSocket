@@ -65,6 +65,7 @@ function App() {
     }
 
     if (msg.type === MessageTypes.GROUP_LIST) {
+      // console.log('Received GROUP_LIST:', msg.groups);
       setGroups(msg.groups || []);
       return;
     }
@@ -276,7 +277,18 @@ function App() {
   };
 
   const handleJoinGroup = (groupName: string) => {
+    // console.log('Joining group:', groupName);
     wsService.current.send(MessageTypes.JOIN_GROUP, undefined, undefined, groupName);
+  };
+
+  const handleLeaveGroup = (groupName: string) => {
+    // console.log('Leaving group:', groupName);
+    wsService.current.send(MessageTypes.LEAVE_GROUP, undefined, undefined, groupName);
+    // If we're currently viewing this group chat, close it
+    if (currentChat?.type === 'group' && currentChat.name === groupName) {
+      setCurrentChat(null);
+    }
+    showNotification(`Left group "${groupName}"`, 'info');
   };
 
   const handleCreateGroup = (groupName: string) => {
@@ -321,6 +333,7 @@ function App() {
         onOpenPrivateChat={handleOpenPrivateChat}
         onOpenGroupChat={handleOpenGroupChat}
         onJoinGroup={handleJoinGroup}
+        onLeaveGroup={handleLeaveGroup}
         onCreateGroup={() => setShowModal(true)}
       />
       <ChatArea

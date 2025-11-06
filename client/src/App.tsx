@@ -168,16 +168,27 @@ function App() {
       username,
       handleMessage,
       () => showNotification('Connection failed', 'error'),
+      // (code) => {
+      //   if (code === 1000) {
+      //     showNotification('Connection closed', 'info');
+      //   } else if (code === 1006) {
+      //     showNotification('This name is already in use', 'warning');
+      //   } else {
+      //     showNotification('Connection lost. Please try again', 'error');
+      //   }
+      //   setTimeout(() => window.location.reload(), 2000);
+      // }
       (code) => {
-        if (code === 1000) {
-          showNotification('Connection closed', 'info');
-        } else if (code === 1006) {
-          showNotification('This name is already in use', 'warning');
-        } else {
-          showNotification('Connection lost. Please try again', 'error');
-        }
-        setTimeout(() => window.location.reload(), 2000);
-      }
+        console.log('Connection closed with code:', code);
+  if (code === 4001) {
+    showNotification('This name is already in use', 'warning');
+  } else if (code === 1000) {
+    showNotification('Connection closed', 'info');
+  } else {
+    showNotification('Connection lost', 'error');
+  }
+}
+
     );
   };
 

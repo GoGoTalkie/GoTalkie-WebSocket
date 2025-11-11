@@ -10,7 +10,7 @@
 **Implementation**:
 - Server: Go-based WebSocket server using Fiber framework (`cmd/server/main.go`)
 - Hub architecture managing all client connections and message routing (`server/hub.go`)
-- Web-based clients (HTML/JavaScript) in `static/index.html`
+- Web-based clients (React/TS) in `client/index.html`
 - Supports 2+ clients on different physical computers
 - Cloud deployment ready (optional +1 bonus point)
 

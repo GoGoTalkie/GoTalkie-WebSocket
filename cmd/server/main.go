@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"
 )
-
+// Global hub instance
 var hub *server.Hub
 
 func main() {
@@ -32,8 +32,6 @@ func main() {
 		Browse:    false,
 		Index:     "index.html",
 	})
-	// Fallback for old static files (if client/dist doesn't exist)
-	app.Static("/", "./static")
 
 	app.Use("/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {

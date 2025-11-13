@@ -73,14 +73,14 @@ function App() {
     if (msg.type === MessageTypes.PRIVATE || msg.type === MessageTypes.FILE_PRIVATE) {
       const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = msg.from === currentMyName ? msg.to! : msg.from!;
-      
+
       // Don't add our own message (already added in handleSendMessage)
       if (msg.from !== currentMyName) {
         setChats((prev) => ({
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
-        
+
         // Increment unread count if this chat is not currently open
         const currentOpenChat = currentChatRef.current;
         if (!currentOpenChat || currentOpenChat.type !== 'private' || currentOpenChat.name !== chatKey) {
@@ -96,14 +96,14 @@ function App() {
     if (msg.type === MessageTypes.GROUP_MESSAGE || msg.type === MessageTypes.FILE_GROUP) {
       const currentMyName = myNameRef.current; // Get value from ref
       const chatKey = 'group_' + msg.group_name;
-      
+
       // Don't add our own message (already added in handleSendMessage)
       if (msg.from !== currentMyName) {
         setChats((prev) => ({
           ...prev,
           [chatKey]: [...(prev[chatKey] || []), msg],
         }));
-        
+
         // Increment unread count if this group chat is not currently open
         const currentOpenChat = currentChatRef.current;
         if (!currentOpenChat || currentOpenChat.type !== 'group' || 'group_' + currentOpenChat.name !== chatKey) {
@@ -123,13 +123,14 @@ function App() {
       handleMessage,
       () => showNotification('Connection failed', 'error'),
       (code) => {
-        if (code === 1000) {
-          showNotification('Connection closed', 'info');
-        } else if (code === 1006) {
+        if (code === 4001) {
           showNotification('This name is already in use', 'warning');
+        } else if (code === 1000) {
+          showNotification('Connection closed', 'info');
         } else {
-          showNotification('Connection lost. Please try again', 'error');
+          showNotification('Connection lost', 'error');
         }
+
         setTimeout(() => window.location.reload(), 2000);
       }
     );
@@ -139,7 +140,7 @@ function App() {
     const newChat = { type: 'private' as const, name: user };
     setCurrentChat(newChat);
     currentChatRef.current = newChat;
-    
+
     // Clear unread count for this chat
     setUnreadCounts((prev) => {
       const updated = { ...prev };
@@ -152,7 +153,7 @@ function App() {
     const newChat = { type: 'group' as const, name: groupName };
     setCurrentChat(newChat);
     currentChatRef.current = newChat;
-    
+
     // Clear unread count for this group chat
     const chatKey = 'group_' + groupName;
     setUnreadCounts((prev) => {
@@ -173,13 +174,13 @@ function App() {
         to: currentChat.name,
         content: content,
       };
-      
+
       const chatKey = currentChat.name;
       setChats((prev) => ({
         ...prev,
         [chatKey]: [...(prev[chatKey] || []), myMessage],
       }));
-      
+
       // Send message to server
       wsService.current.send(MessageTypes.PRIVATE, content, currentChat.name);
     } else {
@@ -190,13 +191,13 @@ function App() {
         group_name: currentChat.name,
         content: content,
       };
-      
+
       const chatKey = 'group_' + currentChat.name;
       setChats((prev) => ({
         ...prev,
         [chatKey]: [...(prev[chatKey] || []), myMessage],
       }));
-      
+
       // Send message to server
       wsService.current.send(MessageTypes.GROUP_MESSAGE, content, undefined, currentChat.name);
     }
@@ -253,8 +254,8 @@ function App() {
 
   const getCurrentMessages = (): Message[] => {
     if (!currentChat) return [];
-    const chatKey = currentChat.type === 'private' 
-      ? currentChat.name 
+    const chatKey = currentChat.type === 'private'
+      ? currentChat.name
       : 'group_' + currentChat.name;
     return chats[chatKey] || [];
   };

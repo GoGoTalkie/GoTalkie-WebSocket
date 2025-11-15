@@ -27,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onCreateGroup,
 }) => {
   const [processingGroup, setProcessingGroup] = useState<string | null>(null);
+  const [tooltipGroup, setTooltipGroup] = useState<string | null>(null);
   return (
     <div className="sidebar">
       <div className="section">
@@ -112,8 +113,27 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 </div>
                 <div className="group-members">
-                  <span className="member-icon">👥</span> {group.members.length} member
-                  {group.members.length > 1 ? 's' : ''}
+                  <span 
+                    className="member-icon"
+                    onMouseEnter={() => setTooltipGroup(group.name)}
+                    onMouseLeave={() => setTooltipGroup(null)}
+                    style={{ position: 'relative', cursor: 'help' }}
+                  >
+                    👥
+                    {tooltipGroup === group.name && (
+                      <div className="member-tooltip">
+                        <div className="tooltip-header">Members ({group.members.length})</div>
+                        <div className="tooltip-members">
+                          {group.members.map((member) => (
+                            <div key={member} className="tooltip-member">
+                              {member === myName ? `${member} (You)` : member}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </span>
+                  {' '}{group.members.length} member{group.members.length > 1 ? 's' : ''}
                 </div>
               </div>
             );

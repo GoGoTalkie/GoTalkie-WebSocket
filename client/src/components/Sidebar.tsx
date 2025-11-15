@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onCreateGroup,
 }) => {
   const [processingGroup, setProcessingGroup] = useState<string | null>(null);
-  const [tooltipGroup, setTooltipGroup] = useState<string | null>(null);
+  const [showMembersGroup, setShowMembersGroup] = useState<string | null>(null);
   return (
     <div className="sidebar">
       <div className="section">
@@ -113,16 +113,36 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 </div>
                 <div className="group-members">
-                  <span 
-                    className="member-icon"
-                    onMouseEnter={() => setTooltipGroup(group.name)}
-                    onMouseLeave={() => setTooltipGroup(null)}
-                    style={{ position: 'relative', cursor: 'help' }}
-                  >
-                    👥
-                    {tooltipGroup === group.name && (
+                  <div className="member-icon-container">
+                    <button 
+                      className="member-icon-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        console.log('Member button clicked for group:', group.name);
+                        setShowMembersGroup(showMembersGroup === group.name ? null : group.name);
+                      }}
+                      aria-label={`Show members of ${group.name}`}
+                      type="button"
+                    >
+                      👥
+                    </button>
+                    {showMembersGroup === group.name && (
                       <div className="member-tooltip">
-                        <div className="tooltip-header">Members ({group.members.length})</div>
+                        <div className="tooltip-header">
+                          <span>Members ({group.members.length})</span>
+                          <button 
+                            className="tooltip-close"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowMembersGroup(null);
+                            }}
+                            aria-label="Close member list"
+                            type="button"
+                          >
+                            ×
+                          </button>
+                        </div>
                         <div className="tooltip-members">
                           {group.members.map((member) => (
                             <div key={member} className="tooltip-member">
@@ -132,8 +152,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                       </div>
                     )}
-                  </span>
-                  {' '}{group.members.length} member{group.members.length > 1 ? 's' : ''}
+                  </div>
+                  {group.members.length} member{group.members.length > 1 ? 's' : ''}
                 </div>
               </div>
             );

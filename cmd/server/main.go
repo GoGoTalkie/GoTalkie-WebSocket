@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"
 )
-
+// Global hub instance
 var hub *server.Hub
 
 func main() {

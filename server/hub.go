@@ -93,10 +93,23 @@ func (h *Hub) Run() {
 			if _, ok := h.clients[client.Name]; ok {
 				delete(h.clients, client.Name)
 				close(client.Send)
-				for _, group := range h.groups {
+
+				// Remove client from all groups and delete empty groups
+				groupsToDelete := make([]string, 0)
+				for groupName, group := range h.groups {
 					group.mu.Lock()
 					delete(group.Members, client.Name)
+
+					// Check if group is now empty
+					if len(group.Members) == 0 {
+						groupsToDelete = append(groupsToDelete, groupName)
+					}
 					group.mu.Unlock()
+				}
+
+				// Delete empty groups
+				for _, groupName := range groupsToDelete {
+					delete(h.groups, groupName)
 				}
 			}
 			h.mu.Unlock()

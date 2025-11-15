@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/GoGoTalkie/GoTalkie-WebSocket/server"
 	"github.com/gofiber/fiber/v2"
@@ -17,14 +18,14 @@ func main() {
 	go hub.Run()
 
 	app := fiber.New()
-	
+
 	// Enable CORS for all routes (required for Cloud Run)
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
-	
+
 	// Serve React build files or fallback to static folder
 	app.Static("/", "./client/dist", fiber.Static{
 		Compress:  true,
@@ -32,8 +33,6 @@ func main() {
 		Browse:    false,
 		Index:     "index.html",
 	})
-	// Fallback for old static files (if client/dist doesn't exist)
-	app.Static("/", "./static")
 
 	app.Use("/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
@@ -59,14 +58,10 @@ func handleWebSocket(c *websocket.Conn) {
 		return
 	}
 
-	if regMsg.Type != server.MsgTypeRegister || regMsg.Content == "" {
-		c.WriteJSON(server.Message{Type: server.MsgTypeError, Error: "Must register first"})
-		c.Close()
-		return
-	}
-
 	if hub.ClientExists(regMsg.Content) {
-		c.WriteJSON(server.Message{Type: server.MsgTypeError, Error: "Name taken"})
+		c.WriteControl(websocket.CloseMessage,
+			websocket.FormatCloseMessage(4001, "Username already in use"),
+			time.Now().Add(time.Second))
 		c.Close()
 		return
 	}

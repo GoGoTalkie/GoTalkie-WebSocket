@@ -14,6 +14,10 @@ const Login: React.FC<LoginProps> = ({ onConnect }) => {
       setError('Please enter a name');
       return;
     }
+    if (name.includes('  ')) {
+      setError('Name cannot contain multiple consecutive spaces');
+      return;
+    }
     setError('');
     onConnect(name);
   };

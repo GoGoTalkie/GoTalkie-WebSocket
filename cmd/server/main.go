@@ -62,7 +62,7 @@ func handleWebSocket(c *websocket.Conn) {
 		c.WriteControl(websocket.CloseMessage,
 			websocket.FormatCloseMessage(4001, "Username already in use"),
 			time.Now().Add(time.Second))
-		// c.Close()
+		c.Close()
 		return
 	}
 

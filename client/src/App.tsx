@@ -52,7 +52,10 @@ function App() {
     }
 
     if (msg.type === MessageTypes.REGISTER) {
-      const name = msg.content?.split(' ').pop() || '';
+      const prefix = 'Registered as ';
+      const name = msg.content?.startsWith(prefix) 
+        ? msg.content.substring(prefix.length) 
+        : msg.content || '';
       setMyName(name);
       myNameRef.current = name; // Update ref
       setIsLoggedIn(true);
